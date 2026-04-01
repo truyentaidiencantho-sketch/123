@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="author" content="Truyền Tải điện Cần Thơ">
+                <title>Truyền Tải Điện Cần Thơ — Truyền tải điện miền Tây</title>
+
+                <!-- SEO: basic meta description and keywords (edit for accuracy) -->
+                <meta name="description" content="Cổng thông tin Truyền tải điện Cần Thơ — tin tức, thông báo, dịch vụ và liên hệ. Địa chỉ: Số 41 đường 3/2, Xuân Khánh, Ninh Kiều, Cần Thơ.">
+                <meta name="keywords" content="truyền tải điện cần thơ, truyền tải điện miền tây, điện lực cần thơ, evn cần thơ">
+                <meta name="robots" content="index, follow">
+                <!-- Replace the canonical/OG URLs below with your real site domain -->
+                <link rel="canonical" href="https://truyentaidiencantho.cloud/">
+
+                <!-- Open Graph / Facebook -->
+                <meta property="og:title" content="Truyền Tải Điện Cần Thơ — Truyền tải điện miền Tây">
+                <meta property="og:description" content="Cổng thông tin Truyền tải điện Cần Thơ — tin tức, thông báo, dịch vụ và liên hệ.">
+                <meta property="og:type" content="website">
+                <meta property="og:url" content="https://truyentaidiencantho.cloud/">
+                <meta property="og:image" content="https://example.com/img/logo1.png">
+
+                <!-- Twitter -->
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:title" content="Truyền Tải Điện Cần Thơ — Truyền tải điện miền Tây">
+                <meta name="twitter:description" content="Cổng thông tin Truyền tải điện Cần Thơ — tin tức, thông báo, dịch vụ và liên hệ.">
+                <meta name="twitter:image" content="https://example.com/img/logo1.png">
+
+                <!-- Structured data (Organization + LocalBusiness) - edit URL/logo/address as needed -->
+                <script type="application/ld+json">
+                {
+                    "@context": "https://truyentaidiencantho.cloud/",
+                    "@type": "Organization",
+                    "name": "Truyền Tải Điện Cần Thơ",
+                    "url": "https://truyentaidiencantho.cloud/",
+                    "logo": "https://example.com/img/logo1.png",
+                    "contactPoint": [{
+                        "@type": "ContactPoint",
+                        "email": "tranphat.truyentai@gmail.com",
+                        "contactType": "customer service",
+                        "areaServed": "VN"
+                    }],
+                    "address": {
+                        "@type": "PostalAddress",
+                        "streetAddress": "Số 41 đường 3/2",
+                        "addressLocality": "Xuân Khánh, Ninh Kiều",
+                        "addressRegion": "Cần Thơ",
+                        "addressCountry": "VN"
+                    }
+                }
+                </script>
+        <link rel="icon" type="image/webp" href="img/iconweb.webp">
+        <link rel="icon" type="image/jpeg" href="img/iconweb.jpg">
+        <link rel="apple-touch-icon" href="img/iconweb.jpg">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/magnific-popup.css">
+        <link rel="stylesheet" href="css/templatemo-ocean-vibes.css">
+        <style>
+            /* Library UI overrides (kept minimal; main styling in CSS file) */
+            .library-item { padding:16px 18px; border:1px solid #eef2f7; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:0 10px 22px rgba(16,24,40,0.08); margin-bottom:12px; }
+            .library-left { display:flex; align-items:center; gap:14px; min-width:0; font-size:18px; font-weight:800; color:#0f172a; }
+            .library-folder { cursor:pointer; }
+            .folder-name { font-weight:700; }
+            .library-actions { display:flex; gap:10px; }
+            .view-btn, .download-btn { display:inline-flex; align-items:center; justify-content:center; padding:15px 18px; border-radius:12px; font-size:18px; gap:10px; border:none; }
+            .view-btn { background:#0ea5e9; color:#fff; box-shadow:0 8px 16px rgba(14,165,233,0.26); }
+            .download-btn { background:#334155; color:#fff; text-decoration:none; box-shadow:0 8px 16px rgba(15,23,42,0.18); }
+            .breadcrumb-item { cursor:pointer; font-weight:600; }
+            .breadcrumb-item:hover { color:#1976d2; }
+
+            /* Preview modal - show preview content edge-to-edge (no white frame)
+               This makes file previews occupy the available viewport space. */
+            #previewModal {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 100000;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            #previewModal .preview-wrap {
+                background: transparent;
+                border-radius: 0;
+                max-width: 100%;
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                box-shadow: none;
+            }
+
+            #previewModal .preview-content {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            #previewModal img#previewImg, #previewModal iframe#previewFrame {
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                max-height: none;
+                object-fit: contain;
+                display: block;
+                border: 0;
+            }
+
+            #previewModal .preview-close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 1001;
+                background: rgba(255,255,255,0.98);
+                color: #111;
+                border-radius: 6px;
+                padding: 8px 10px;
+                border: 0;
+                cursor: pointer;
+                font-size: 16px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            }
+
+            #previewModal .preview-close:hover { background:#f7f7f7; }
+            /* Video gallery styles */
+            .video-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px; }
+            .video-thumb-item { background:#fff; border-radius:12px; padding:12px; box-shadow:0 8px 18px rgba(0,0,0,0.08); }
+            .video-thumb-wrap { position:relative; overflow:hidden; border-radius:12px; }
+            .video-thumb { width:100%; height:320px; object-fit:cover; display:block; }
+            .video-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:8px; opacity:0; transition:opacity .12s ease; background:linear-gradient(transparent, rgba(0,0,0,0.32)); }
+            .video-thumb-wrap:hover .video-overlay { opacity:1; }
+            .video-title { margin-top:12px; font-size:19px; color:#1f2937; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+            /* Compact list layout (thumbnail left, title right) */
+            .video-list { display:flex; flex-direction:column; gap:16px; }
+            .video-list-item { display:flex; align-items:center; gap:18px; padding:18px 14px; border-bottom:1px solid #eee; }
+            .video-thumb-col { flex:0 0 360px; }
+            .thumb-small { width:360px; height:204px; position:relative; overflow:hidden; border-radius:12px; background:#000; display:block; box-shadow:0 10px 22px rgba(16,24,40,0.12); }
+            .video-thumb-small { width:100%; height:100%; object-fit:cover; display:block; }
+            .duration-badge { position:absolute; right:8px; bottom:8px; background:rgba(0,0,0,0.78); color:#fff; font-size:14px; padding:4px 8px; border-radius:6px; }
+            .meta-col { flex:1; min-width:0; }
+            .video-title { font-size:19px; font-weight:800; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .video-sub { font-size:16px; color:#374151; margin-top:6px; }
+            .actions-col { display:flex; gap:12px; align-items:center; }
+            /* make buttons in the video list equal size and stable against other theme rules */
+            .video-list-item .actions-col .view-btn,
+            .video-list-item .actions-col .download-btn {
+                width:148px;
+                height:52px;
+                padding:10px 16px;
+                min-width:0;
+                font-size:17px;
+                border-radius:10px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                box-sizing:border-box;
+            }
+
+            @media (max-width: 1200px) {
+                .video-thumb-col { flex:0 0 320px; }
+                .thumb-small { width:320px; height:182px; }
+            }
+
+            @media (max-width: 900px) {
+                .video-list-item { flex-direction:column; align-items:flex-start; }
+                .video-thumb-col { width:100%; }
+                .thumb-small { width:100%; height:220px; }
+                .actions-col { width:100%; }
+            }
+
+            /* Player modal */
+            .video-player-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); z-index:100000; padding:20px; width:100%; height:100%; overflow:auto; }
+            .video-player-wrap { width:calc(100% - 24px); max-width:1320px; background:#000; border-radius:10px; padding:14px; position:relative; display:flex; flex-direction:column; gap:10px; align-items:stretch; }
+            .vp-close { position:absolute; right:12px; top:12px; z-index:3; font-size:20px; color:#fff; background:transparent; border:0; cursor:pointer; }
+            #plyr-video { width:100%; height:78vh; max-height:90vh; background:#000; border-radius:8px; display:block; }
+        </style>
+    </head>
+    <body>
+        <header class="tm-site-header">
+            <div class="image-container3">
+                <picture>
+                    <source srcset="img/logo1.webp" type="image/webp">
+                    <img src="img/logo1.png" alt="Logo" width="1000" loading="lazy">
+                </picture>
+            </div>
+            <div class="image-container4">
+                <picture>
+                    <source srcset="img/cty.webp" type="image/webp">
+                    <img src="img/cty.jpg" alt="Ảnh công ty" loading="lazy">
+                </picture>
+            </div>
+        </header>
+
+        <div class="tm-container">
+            <div class="nav-hero">
+                <h1 class="tm-section-heading">DANH MỤC TÙY CHỌN</h1>
+                <nav class="tm-main-nav">
+                    <ul id="inline-popups">
+                        <li class="tm-nav-item">
+                            <a href="#intro" data-effect="mfp-move-from-top" class="tm-nav-link">Giới Thiệu<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/building-office.svg" alt=""></span></a>
+                        </li>
+                        <li class="tm-nav-item">
+                            <a href="#gallery" data-effect="mfp-move-from-top" class="tm-nav-link" id="tm-gallery-link">Bản tin &amp; Kế hoạch<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/newspaper.svg" alt=""></span></a>
+                        </li>
+                        <li class="tm-nav-item">
+                            <a href="#library-popup" data-effect="mfp-move-from-top" class="tm-nav-link">Thư viện<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/folder-open.svg" alt=""></span></a>
+                        </li>
+                        <li class="tm-nav-item">
+                            <a href="#about" data-effect="mfp-move-from-top" class="tm-nav-link no-mfp">Thư mục admin<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/shield-check.svg" alt=""></span></a>
+                        </li>
+                        <li class="tm-nav-item">
+                            <a href="#video-popup" data-effect="mfp-move-from-top" class="tm-nav-link">Video<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/play-circle.svg" alt=""></span></a>
+                        </li>
+                        <li class="tm-nav-item">
+                            <a href="#contact" data-effect="mfp-move-from-top" class="tm-nav-link">Liên hệ<span class="nav-icon" aria-hidden="true"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/chat-bubble-left-right.svg" alt=""></span></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <br>
+            <br>
+
+            <!-- INTRO POPUP -->
+            <div id="intro" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <div class="tm-intro-row tm-row">
+                    <div class="tm-intro-col-l">
+                        <picture>
+                            <source srcset="img/intro.webp" type="image/webp">
+                            <img class="tm-intro-img" src="img/intro.jpg" alt="Truyền tải điện Cần Thơ" loading="lazy">
+                        </picture>
+                    </div>
+                    <div class="tm-intro-col-mid">
+                        <h2 class="tm-color-primary tm-page-title">Truyền Tải Điện Cần Thơ</h2>
+
+                        <div class="intro-columns">
+                            <div class="intro-text">Đang tải nội dung...</div>
+                        </div>
+
+                        <div style="text-align:right;margin-top:18px;">
+                            <button class="tm-btn tm-btn-primary tm-btn-next">Mục tiếp theo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <center>
+                <div id="gallery" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                    <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                    <h2 class="tm-color-primary tm-page-title">Bản tin &amp; Kế hoạch</h2>
+                    <div id="bantin-search" class="library-search"></div>
+                    <div id="bantin-breadcrumb" style="margin:20px 0;font-weight:bold;"></div>
+                    <div id="bantin" class="data-pane">Đang tải dữ liệu...</div>
+                </div>
+            </center>
+
+            <!-- Quảng cáo / Banners (gallery2) -->
+            <div id="gallery2" class="gallery2"></div>
+
+            <!-- ================= THƯ VIỆN GOOGLE DRIVE ================= -->
+            <div id="library-popup" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <h2 class="tm-color-primary tm-page-title">Thư viện tài liệu</h2>
+                <div id="library-search" class="library-search"></div>
+                <div id="breadcrumb" style="margin:20px 0;font-weight:bold;"></div>
+                <div id="library" class="data-pane">Đang tải dữ liệu...</div>
+            </div>
+
+            <div id="about" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <h2 class="tm-color-primary tm-page-title">Thư mục admin</h2>
+                <div id="quydinh-search" class="library-search"></div>
+                <div id="quydinh-breadcrumb" style="margin:20px 0;font-weight:bold;"></div>
+                <div id="quydinh" class="data-pane">Đang tải dữ liệu...</div>
+            </div>
+
+            <!-- Admin password prompt (hidden inline popup) -->
+            <div id="admin-pass-prompt" class="popup mfp-with-anim mfp-hide tm-bg-white" style="max-width:560px;">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <h2 class="tm-color-primary tm-page-title">Yêu cầu mật khẩu</h2>
+                <div class="admin-pass-content" style="padding:18px 22px;">
+                    <p>Nhập mật khẩu để truy cập phần <strong>Thư mục admin</strong>.</p>
+                    <input id="admin-pass-input" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+                    <div style="display:flex;gap:12px;margin-top:14px;justify-content:flex-end;">
+                        <button id="admin-pass-cancel" class="tm-btn">Hủy</button>
+                        <button id="admin-pass-submit" class="tm-btn tm-btn-primary">Xác nhận</button>
+                    </div>
+                    <div id="admin-pass-message" style="margin-top:12px;color:#c00;min-height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- VIDEO POPUP (Drive-driven) -->
+            <div id="video-popup" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <h2 class="tm-color-primary tm-page-title">Video</h2>
+                <div id="video-search" class="library-search"></div>
+                <div id="video-breadcrumb" style="margin:20px 0;font-weight:bold;"></div>
+                <div id="video" class="data-pane">Đang tải dữ liệu...</div>
+            </div>
+
+            <div id="contact" class="popup mfp-with-anim mfp-hide tm-bg-gray">
+                <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
+                <div class="contact-card">
+                    <div class="contact-map">
+                        <div class="mapouter"><div class="gmap_canvas"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4547.895440458913!2d105.76566757560425!3d10.025890072587544!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0883a6616e473%3A0x572c5b2821688b82!2zVHJ1eeG7gW4gVOG6o2kgxJBp4buHbiBNaeG7gW4gVMOieSAxLUPDtG5nIFR5IFRydXnhu4FuIFThuqNpIMSQaeG7h24gNA!5e1!3m2!1svi!2s!4v1722242388254!5m2!1svi!2s" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div></div>
+                    </div>
+                    <div class="contact-info">
+                        <address class="contact-address">Số 41 đường 3/2, Phường Xuân Khánh,<br>Quận Ninh Kiều, Thành Phố Cần Thơ</address>
+                        <div class="contact-email"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/at-symbol.svg" alt="" class="icon-inline"> <a href="mailto:tranphat.truyentai@gmail.com">Email: tranphat.truyentai@gmail.com</a></div>
+                        <div class="contact-actions"><a class="tm-btn" href="https://www.google.com/maps/search/?api=1&query=41+duong+3%2F2+Can+Tho" target="_blank" rel="noopener">Mở trong Google Maps</a></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="tm-footer"><span>Bản thử nghiệm website thông tin của Truyền Tải Điện Cần Thơ</span><span>Admin: Trần Tấn Phát</span></footer>
+
+        <script src="js/jquery-3.4.1.min.js" defer></script>
+        <script src="js/jquery.magnific-popup.min.js" defer></script>
+        <script src="js/config.obf.js" defer></script>
+        <script src="js/library.js" defer></script>
+        <script src="js/templatemo-script.js" defer></script>
+        <script src="js/video-player.js" defer></script>
+
+        <!-- PREVIEW MODAL -->
+        <div id="previewModal" role="dialog" aria-hidden="true">
+            <div class="preview-wrap" role="document">
+                <button class="preview-close" onclick="closePreview()" aria-label="Đóng">✕</button>
+                <div class="preview-content">
+                    <img id="previewImg" alt="Preview" style="display:none;" />
+                    <iframe id="previewFrame" style="display:none;" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
