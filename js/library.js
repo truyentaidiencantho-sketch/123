@@ -728,7 +728,7 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
                     </div>
                     <div class="actions-col">
                         <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
-                        <a class="download-btn small" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span></a>
+                        <a class="download-btn small" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span></a>
                     </div>
                 `;
 
@@ -751,7 +751,7 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
                         </button>
 
                         <a class="download-btn" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">
-                           ${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span>
+                           ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>
                         </a>
                     </div>
                 `;
@@ -978,7 +978,7 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
                 </div>
                 <div class="actions-col">
                     <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
-                    <a class="download-btn small" href="https://drive.google.com/uc?id=${f.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span></a>
+                    <a class="download-btn small" href="https://drive.google.com/uc?id=${f.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span></a>
                 </div>
             `;
 
@@ -1018,7 +1018,7 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
                 dl.className = 'download-btn';
                 dl.href = `https://drive.google.com/uc?id=${f.id}&export=download`;
                 dl.target = '_blank';
-                dl.innerHTML = `${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span>`;
+                dl.innerHTML = `${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>`;
                 actions.appendChild(dl);
             }
 
