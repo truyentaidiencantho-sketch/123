@@ -89,7 +89,7 @@ function renderGalleryWindow() {
     if (!gallery) return;
     const len = imageItems.length;
     if (!len) {
-        gallery.innerHTML = '<p style="padding:20px;color:#555">Hình ảnh đang lỗi kết nối đến nơi chứa. Vui lòng đợi admin bảo trì!</p>';
+        gallery.innerHTML = '<p style="padding:20px;color:#555">Hình ảnh đang lỗi kết nối đến nơi chứa. Vui lòng đợi admin bảo trì</p>';
         return;
     }
 

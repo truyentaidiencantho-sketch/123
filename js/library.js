@@ -1,4 +1,4 @@
-const APP_API_CLIENT =
+﻿const APP_API_CLIENT =
     (typeof window !== 'undefined' && window.APP_API) ? window.APP_API : null;
 const ROOT_KEYS = {
     library: 'library',
@@ -532,61 +532,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // Setup "Thư mục admin" (about) popup to load from a separate Drive folder
     const quyDinhLink = document.querySelector('a[href="#about"]');
 
-    // Helper: fetch password list from Google Doc (supports multiple export fallbacks).
-    // Parses all `{ ... }` blocks and returns unique trimmed lines inside.
-    async function fetchAdminPasswords() {
-        try {
-            const now = Date.now();
-            const cacheKey = DOC_KEYS.adminPasswords;
-            const cached = ADMIN_PASSWORDS_CACHE[cacheKey];
-            if (cached && (now - cached.ts) < ADMIN_PASSWORDS_CACHE_TTL) {
-                return Array.isArray(cached.list) ? cached.list.slice() : [];
-            }
-
-            let fetched = null;
-            const mimeTypes = ['text/plain', 'text/html'];
-
-            for (const mimeType of mimeTypes) {
-                try {
-                    const txt = await exportNamedText(DOC_KEYS.adminPasswords, mimeType);
-                    if (txt && txt.trim()) {
-                        fetched = txt;
-                        break;
-                    }
-                } catch (err) {
-                    continue;
-                }
-            }
-
-            if (!fetched) {
-                console.warn('fetchAdminPasswords: no document export available from intermediary server');
-                ADMIN_PASSWORDS_CACHE[cacheKey] = { list: [], ts: now };
-                return [];
-            }
-
-            // Extract all {...} blocks
-            const re = /\{([\s\S]*?)\}/g;
-            const matches = [];
-            let m;
-            while ((m = re.exec(fetched)) !== null) {
-                if (m[1]) matches.push(m[1]);
-            }
-            if (!matches.length) {
-                ADMIN_PASSWORDS_CACHE[cacheKey] = { list: [], ts: now };
-                return [];
-            }
-
-            const combined = matches.join('\n');
-            const lines = combined.split(/\r?\n/).map(s => s.replace(/\u200B/g, '').trim()).filter(Boolean);
-            const unique = Array.from(new Set(lines));
-            ADMIN_PASSWORDS_CACHE[cacheKey] = { list: unique, ts: now };
-            return unique;
-        } catch (err) {
-            console.warn('fetchAdminPasswords error', err);
-            return [];
-        }
-    }
-
     // Show password prompt (Magnific inline) and validate against doc passwords.
     // Authentication is per-interaction; reloading the page will require entering the password again.
     function openAdminPasswordPrompt(folderId) {
@@ -631,20 +576,20 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (msg) msg.textContent = 'Đang kiểm tra...';
                         let result = null;
                         try {
-                            if (msg) msg.textContent = 'Không lấy được danh sách mật khẩu. Vui lòng thử lại sau.';
+                            // Kiểm tra mật khẩu ở server
                             result = await verifyAdminPassword(val);
                         } catch (err) {
+                            if (msg) msg.textContent = 'Không kiểm tra được mật khẩu. Vui lòng thử lại sau.';
                             console.warn('verifyAdminPassword error', err);
-                            if (msg) msg.textContent = 'KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c máº­t kháº©u. Vui lÃ²ng thá»­ láº¡i sau.';
                             return;
                         }
                         if (result && result.ok) {
                             ADMIN_AUTHENTICATED = true;
-                            if (msg) msg.textContent = '';
-                            $.magnificPopup.close();
+                            if (msg) msg.textContent = 'Đã nhập đúng mật khẩu, vui lòng đợi trong giây lát...';
                             // load admin folder then open the about popup
                             try {
                                 await loadFolderCustom(folderId, 'Thư mục admin', true, 'quydinh', 'quydinh-breadcrumb');
+                                $.magnificPopup.close();
                                 $.magnificPopup.open({ items: { src: '#about' }, type: 'inline', showCloseBtn: false });
                             } catch (e) {
                                 console.warn('Error loading admin folder after auth', e);
@@ -783,7 +728,7 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
                     </div>
                     <div class="actions-col">
                         <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
-                        <a class="download-btn small" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span></a>
+                        <a class="download-btn small" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span></a>
                     </div>
                 `;
 
@@ -806,7 +751,7 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
                         </button>
 
                         <a class="download-btn" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">
-                           ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span>
+                           ${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span>
                         </a>
                     </div>
                 `;
@@ -1033,7 +978,7 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
                 </div>
                 <div class="actions-col">
                     <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
-                    <a class="download-btn small" href="https://drive.google.com/uc?id=${f.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span></a>
+                    <a class="download-btn small" href="https://drive.google.com/uc?id=${f.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span></a>
                 </div>
             `;
 
@@ -1073,7 +1018,7 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
                 dl.className = 'download-btn';
                 dl.href = `https://drive.google.com/uc?id=${f.id}&export=download`;
                 dl.target = '_blank';
-                dl.innerHTML = `${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span>`;
+                dl.innerHTML = `${hi('arrow-down-tray','hi-icon-btn')} <span>Táº£i</span>`;
                 actions.appendChild(dl);
             }
 
