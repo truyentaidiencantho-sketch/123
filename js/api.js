@@ -24,8 +24,18 @@
         return url.toString();
     }
 
-    async function requestJson(path, params) {
-        const res = await fetch(buildUrl(path, params));
+    async function requestJson(path, params, options = {}) {
+        const method = (options.method || "GET").toUpperCase();
+        const fetchOptions = { method };
+
+        if (options.body !== undefined) {
+            fetchOptions.headers = {
+                "Content-Type": "application/json",
+            };
+            fetchOptions.body = JSON.stringify(options.body);
+        }
+
+        const res = await fetch(buildUrl(path, params), fetchOptions);
         const text = await res.text();
 
         if (!res.ok) {
@@ -65,6 +75,12 @@
         },
         async exportDriveText(fileId, mimeType = "text/plain") {
             return requestText("exportDriveText", { fileId, mimeType });
+        },
+        async verifyAdminPassword(password) {
+            return requestJson("verifyAdminPassword", null, {
+                method: "POST",
+                body: { password },
+            });
         },
     };
 

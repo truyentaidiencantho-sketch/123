@@ -8,12 +8,7 @@ const ROOT_KEYS = {
 };
 const DOC_KEYS = {
     intro: 'intro',
-    adminPasswords: 'adminPasswords',
 };
-
-// Cache for admin password lists (per-doc), TTL in ms
-const ADMIN_PASSWORDS_CACHE = {};
-const ADMIN_PASSWORDS_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 // Flag to remember admin auth during this page session (reset on reload)
 let ADMIN_AUTHENTICATED = false;
@@ -51,6 +46,10 @@ async function exportDriveText(fileId, mimeType) {
 
 async function exportNamedText(docKey, mimeType) {
     return getApiClient().exportNamedText(docKey, mimeType);
+}
+
+async function verifyAdminPassword(password) {
+    return getApiClient().verifyAdminPassword(password);
 }
 
 async function openLibraryRoot() {
@@ -630,13 +629,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         const val = (inp && inp.value) ? inp.value.trim() : '';
                         if (!val) { if (msg) msg.textContent = 'Vui lòng nhập mật khẩu.'; return; }
                         if (msg) msg.textContent = 'Đang kiểm tra...';
-                        const list = await fetchAdminPasswords();
-                        if (!list || !list.length) {
+                        let result = null;
+                        try {
                             if (msg) msg.textContent = 'Không lấy được danh sách mật khẩu. Vui lòng thử lại sau.';
+                            result = await verifyAdminPassword(val);
+                        } catch (err) {
+                            console.warn('verifyAdminPassword error', err);
+                            if (msg) msg.textContent = 'KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c máº­t kháº©u. Vui lÃ²ng thá»­ láº¡i sau.';
                             return;
                         }
-                        const ok = list.some(p => p === val);
-                        if (ok) {
+                        if (result && result.ok) {
                             ADMIN_AUTHENTICATED = true;
                             if (msg) msg.textContent = '';
                             $.magnificPopup.close();
