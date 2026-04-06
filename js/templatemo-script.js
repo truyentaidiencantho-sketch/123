@@ -146,11 +146,16 @@ function startGalleryRotation() {
 }
 
 async function initQuangCao() {
-    // Drive folder for quảng cáo
-    const QUANGCAO_FOLDER_ID = '1JMSJQhqP0F6iY3p8S4plmYFxGCo1__QD';
     try {
+        const apiClient =
+            (typeof window !== 'undefined' && window.APP_API) ? window.APP_API : null;
+        if (!apiClient || !apiClient.getRootFolder) {
+            throw new Error('Chua cau hinh APP_API de tai banner');
+        }
+
+        const root = await apiClient.getRootFolder('ads');
         // Try loading using raw Drive file metadata so we can test multiple candidate URLs
-        const files = await fetchFilesInFolder(QUANGCAO_FOLDER_ID);
+        const files = await fetchFilesInFolder(root.folderId);
         if (files && files.length) {
             const upgradeThumb = u => u ? u.replace(/=s\d+(?:-c)?$/i, '=s480') : u;
             const collected = [];
