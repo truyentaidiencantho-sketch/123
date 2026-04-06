@@ -177,7 +177,7 @@ function renderFiles(files) {
                     <a class="download-btn"
                        href="https://drive.google.com/uc?id=${file.id}&export=download"
                        target="_blank">
-                       ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span>
+                       ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>
                     </a>
                 </div>
             `;
