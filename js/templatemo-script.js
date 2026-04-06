@@ -89,7 +89,7 @@ function renderGalleryWindow() {
     if (!gallery) return;
     const len = imageItems.length;
     if (!len) {
-        gallery.innerHTML = '<p style="padding:20px;color:#555">Không có ảnh quảng cáo từ Drive. Vui lòng kiểm tra quyền chia sẻ thư mục Drive.</p>';
+        gallery.innerHTML = '<p style="padding:20px;color:#555">Hình ảnh đang lỗi kết nối đến nơi chứa. Vui lòng đợi admin bảo trì!</p>';
         return;
     }
 
