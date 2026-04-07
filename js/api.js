@@ -70,6 +70,13 @@
             const data = await requestJson("listDriveFiles", { folderId });
             return normalizeFolderResponse(data).files;
         },
+        // [COPILOT-EDIT] Server-side search API: searchDriveFiles(q, folderId, rootKey, options)
+        async searchDriveFiles(q, folderId, rootKey, options = {}) {
+            const params = Object.assign({ q, folderId, rootKey }, options || {});
+            const data = await requestJson("searchDriveFiles", params);
+            if (!data) return { results: [] };
+            return data;
+        },
         async exportNamedText(docKey, mimeType = "text/plain") {
             return requestText("exportDriveText", { docKey, mimeType });
         },

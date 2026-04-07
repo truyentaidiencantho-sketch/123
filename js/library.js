@@ -88,16 +88,11 @@ async function loadFolder(folderId, folderName = "Thư viện", reset = false, p
         renderFiles(files);
         renderBreadcrumb();
 
-        // also fetch the full recursive file list (including subfolders) for search
+        // [COPILOT-EDIT] Do not fetch recursive file list on client anymore.
+        // Server will perform recursive search; client keeps only immediate children.
         const container = document.getElementById('library');
         if (container) {
-            try {
-                const allFiles = await fetchFilesRecursively(folderId);
-                container._files = allFiles || files;
-            } catch (err) {
-                console.warn('Error fetching recursive files for search', err);
-                container._files = files;
-            }
+            container._files = files; // immediate children only
         }
 
         // initialize search UI for library
@@ -177,7 +172,7 @@ function renderFiles(files) {
                     <a class="download-btn"
                        href="https://drive.google.com/uc?id=${file.id}&export=download"
                        target="_blank">
-                       ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>
+                       ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span>
                     </a>
                 </div>
             `;
@@ -675,13 +670,8 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
 
     try {
         const files = await fetchFilesInFolder(folderId);
-        let allFiles = [];
-        try {
-            allFiles = await fetchFilesRecursively(folderId);
-        } catch (e) {
-            console.warn('Could not fetch recursive files for container', containerId, e);
-            allFiles = files || [];
-        }
+        // [COPILOT-EDIT] Avoid fetching recursive files on client; server will handle global search.
+        const allFiles = files || [];
 
         container.innerHTML = "";
 
@@ -762,7 +752,7 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
 
         if (listEl) container.appendChild(listEl);
 
-        // store recursive files on container for search and setup search UI
+        // [COPILOT-EDIT] Store only immediate children; server search will be used for global queries
         container._files = allFiles || (files || []);
         setupSearch(containerId, containerId + '-search', breadcrumbId);
 
@@ -852,6 +842,7 @@ function setupSearch(containerId, searchPlaceholderId, breadcrumbId) {
             <input type="search" class="library-search-input" placeholder="Tìm file theo tên, chữ cái đầu, hoặc số..." />
             <button class="library-search-btn">${hi('magnifying-glass','hi-icon-btn')}</button>
         </div>
+        <div class="library-search-hint" style="font-size:15px;color:#c00;margin-top:6px;font-weight:700;">Vui lòng nhập ít nhất 2 từ để tìm kiếm.</div>
         <div class="library-search-results" aria-live="polite"></div>
     `;
 
@@ -864,37 +855,67 @@ function setupSearch(containerId, searchPlaceholderId, breadcrumbId) {
         performSearch(containerId, q, resultsBox, breadcrumbId);
     }
 
-    // debounce
+    // debounce + IME (composition) handling to support Vietnamese typing
     let t;
+    let isComposing = false;
+
+    input.addEventListener('compositionstart', () => { isComposing = true; });
+    input.addEventListener('compositionend', (e) => { isComposing = false; clearTimeout(t); doSearch(); });
+
     input.addEventListener('input', () => {
+        if (isComposing) return; // skip interim composition events
         clearTimeout(t);
-        t = setTimeout(doSearch, 160);
+        t = setTimeout(doSearch, 220);
     });
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+            clearTimeout(t);
             doSearch();
         }
     });
 
-    btn.addEventListener('click', doSearch);
+    // clicking the button still triggers an immediate search
+    btn.addEventListener('click', () => { clearTimeout(t); doSearch(); });
 }
 
-function performSearch(containerId, query, resultsBox, breadcrumbId) {
+// [COPILOT-EDIT] performSearch now queries server-side search and scores results locally
+async function performSearch(containerId, query, resultsBox, breadcrumbId) {
     resultsBox = resultsBox || document.querySelector('#' + containerId + '-search .library-search-results');
     const container = document.getElementById(containerId);
     if (!container) return;
-    const files = container._files || [];
-    const q = (query || '').toLowerCase().trim();
+    const qRaw = (query || '').trim();
+    const q = qRaw.toLowerCase();
 
     resultsBox.innerHTML = '';
-    if (!q) {
-        resultsBox.innerHTML = '<p style="padding:8px;color:#666">Nhập từ khóa để tìm file...</p>';
+    // [COPILOT-EDIT] Require at least 2 words to activate search
+    const tokens = qRaw.split(/\s+/).filter(Boolean);
+    if (!q || tokens.length < 2) {
+        resultsBox.innerHTML = '<p style="padding:8px;color:#666">Vui lòng nhập ít nhất 2 từ để tìm kiếm.</p>';
         return;
     }
 
-    // scoring
+    // Attempt server-side batched search first (search only within the current folder)
+    let files = [];
+    let isServerResults = false;
+    try {
+        const api = getApiClient();
+        const folderId = (containerId === 'library') ? currentFolder : ((container._pathStack && container._pathStack.length) ? container._pathStack[container._pathStack.length - 1].id : '');
+        resultsBox.innerHTML = '<p style="padding:8px;color:#666">Đang tìm...</p>';
+        // [COPILOT-EDIT] pass batchSize, threshold and timeout to server
+        const data = await api.searchDriveFiles(qRaw, folderId, undefined, { batchSize: 50, threshold: 0.6, timeoutMs: 7000, minWords: 2 });
+        // Debug: log raw server response so we can inspect ordering and scores
+        try { console.log('searchDriveFiles response', data); } catch (e) {}
+        if (data && Array.isArray(data.results)) { files = data.results; isServerResults = true; }
+        else if (data && Array.isArray(data.files)) { files = data.files; isServerResults = true; }
+        else if (Array.isArray(data)) { files = data; isServerResults = true; }
+    } catch (err) {
+        console.warn('performSearch: server search failed, falling back to client-side list', err);
+        files = container._files || [];
+    }
+
+    // scoring (same logic as before for client fallback)
     function isSubsequence(a, b) {
         let i = 0, j = 0;
         while (i < a.length && j < b.length) {
@@ -925,45 +946,30 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
         return dp[m][n];
     }
 
-    const scored = files.map(f => {
-        const name = (f.name || '').toLowerCase();
-        let score = 0;
-        if (name === q) score += 2000;
-        if (name.startsWith(q)) score += 900;
-        if (name.indexOf(q) !== -1) score += 600;
-        const init = initialsOf(f.name || '');
-        if (init.startsWith(q)) score += 800;
-        if (init.indexOf(q) !== -1) score += 400;
-        if (/\d/.test(q) && name.indexOf(q) !== -1) score += 700;
-        if (isSubsequence(q, name)) score += 200;
-        const lev = levenshtein(q, name);
-        const maxLen = Math.max(q.length, name.length);
-        const sim = maxLen ? (maxLen - lev) / maxLen : 0;
-        score += Math.floor(sim * 150);
-        return { file: f, score };
-    }).filter(x => x.score > 0).sort((a,b) => b.score - a.score || (a.file.name || '').localeCompare(b.file.name || ''));
-
-    if (!scored || scored.length === 0) {
-        resultsBox.innerHTML = '<p style="padding:8px;color:#666">Không tìm thấy kết quả.</p>';
-        return;
-    }
-
-    const top = scored.slice(0, 5);
-    const list = document.createElement('div');
+    let list = document.createElement('div');
     list.className = 'library-search-results-list';
 
-    top.forEach(item => {
-        const f = item.file;
-        const row = document.createElement('div');
+    if (isServerResults) {
+        // Server already returned filtered matches (with `_score`), sort by score
+        if (!files || files.length === 0) {
+            resultsBox.innerHTML = '<p style="padding:8px;color:#666">Không tìm thấy kết quả.</p>';
+            return;
+        }
 
+        files.sort((a,b) => (b._matchExact || 0) - (a._matchExact || 0) || (b._score || 0) - (a._score || 0) || ((a.name||'').localeCompare(b.name||'')));
+        const top = files.slice(0, 5);
+
+        top.forEach(f => {
+        const row = document.createElement('div');
         const ext = (f.name || '').split('.').pop().toLowerCase();
         const isVideo = (f.mimeType && f.mimeType.startsWith('video')) || ['mp4','webm','ogg','mov'].includes(ext);
 
-        // If searching the video container and result is a video, render compact thumbnail row
         if (containerId === 'video' && isVideo) {
             row.className = 'video-list-item';
             const thumb = (f.url && f.url.trim()) || (f.thumbnailLink && f.thumbnailLink.trim()) || f.webContentLink || f.webViewLink || (f.id ? getDriveImageUrl(f.id) : '') || '';
             const duration = (f.videoMediaMetadata && f.videoMediaMetadata.durationMillis) ? formatDurationMs(f.videoMediaMetadata.durationMillis) : '';
+            const matchExact = f._matchExact || 0;
+            const scoreVal = Number(f._score || 0);
 
             row.innerHTML = `
                 <div class="video-thumb-col">
@@ -974,7 +980,7 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
                 </div>
                 <div class="meta-col">
                     <div class="video-title">${f.name}</div>
-                    <div class="video-sub">Video</div>
+                    <div class="video-sub">Video <span class="video-debug" style="margin-left:8px;color:#666;font-size:13px">[m:${matchExact} s:${scoreVal.toFixed(2)}]</span></div>
                 </div>
                 <div class="actions-col">
                     <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
@@ -986,14 +992,14 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
             if (openBtn) openBtn.addEventListener('click', () => openVideoPlayer(f.id, f.name, thumb, f.webContentLink));
 
             list.appendChild(row);
-        }
-        else {
+        } else {
             row.className = 'library-search-result-item';
-
             const left = document.createElement('div');
             left.className = 'result-left';
             const iconData = getFileIconData(f.name || '');
-            left.innerHTML = `<span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span><span class="result-name">${f.name}</span>`;
+            const matchExact = f._matchExact || 0;
+            const scoreVal = Number(f._score || 0);
+            left.innerHTML = `<span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span><span class="result-name">${f.name}</span><span class="result-meta" style="margin-left:10px;color:#666;font-size:13px">[m:${matchExact} s:${scoreVal.toFixed(2)}]</span>`;
 
             const actions = document.createElement('div');
             actions.className = 'result-actions';
@@ -1029,6 +1035,143 @@ function performSearch(containerId, query, resultsBox, breadcrumbId) {
     });
 
     resultsBox.appendChild(list);
+
+    return;
+    }
+
+    // Client-side fallback scoring (when server didn't return results)
+    // helper: count exact token matches (normalize & strip diacritics when possible)
+    function stripAccents(s) {
+        try { return String(s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ''); } catch (e) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+    }
+
+    function tokenizeForMatch(s) {
+        let v = stripAccents(s || '');
+        // remove trailing file extensions
+        v = v.replace(/\.(?:pdf|mp4|docx|doc|pptx|ppt|xls|xlsx|csv|jpg|jpeg|png|webp|gif|txt|md|zip|rar|7z|mp3|ogg|mov)$/i, '');
+        try { v = v.replace(/[^\\p{L}\\p{N}]+/gu, ' '); } catch (e) { v = v.replace(/[^a-z0-9]+/gi, ' '); }
+        return v.split(/\s+/).map(t => t.trim()).filter(Boolean);
+    }
+
+    function countExactMatches(name, query) {
+        const nameTokens = tokenizeForMatch(name || '');
+        const queryTokens = tokenizeForMatch(query || '');
+        const used = new Array(nameTokens.length).fill(false);
+        let exact = 0;
+        for (const qt of queryTokens) {
+            for (let i = 0; i < nameTokens.length; i++) {
+                if (!used[i] && nameTokens[i] === qt) { exact++; used[i] = true; break; }
+            }
+        }
+        return exact;
+    }
+
+    const scored = (files || []).map(f => {
+        const name = (f.name || '').toLowerCase();
+        let score = 0;
+        if (name === q) score += 2000;
+        if (name.startsWith(q)) score += 900;
+        if (name.indexOf(q) !== -1) score += 600;
+        const init = initialsOf(f.name || '');
+        if (init.startsWith(q)) score += 800;
+        if (init.indexOf(q) !== -1) score += 400;
+        if (/\d/.test(q) && name.indexOf(q) !== -1) score += 700;
+        if (isSubsequence(q, name)) score += 200;
+        const lev = levenshtein(q, name);
+        const maxLen = Math.max(q.length, name.length);
+        const sim = maxLen ? (maxLen - lev) / maxLen : 0;
+        score += Math.floor(sim * 150);
+        const matchExact = countExactMatches(f.name || '', qRaw);
+        return { file: f, score, matchExact };
+    }).filter(x => x.score > 0 || (x.matchExact && x.matchExact > 0)).sort((a,b) => (b.matchExact || 0) - (a.matchExact || 0) || b.score - a.score || (a.file.name || '').localeCompare(b.file.name || ''));
+
+    if (!scored || scored.length === 0) {
+        resultsBox.innerHTML = '<p style="padding:8px;color:#666">Không tìm thấy kết quả.</p>';
+        return;
+    }
+
+    const top = scored.slice(0, 5);
+    const listFallback = document.createElement('div');
+    listFallback.className = 'library-search-results-list';
+
+    top.forEach(item => {
+        const f = item.file;
+        const row = document.createElement('div');
+
+        const ext = (f.name || '').split('.').pop().toLowerCase();
+        const isVideo = (f.mimeType && f.mimeType.startsWith('video')) || ['mp4','webm','ogg','mov'].includes(ext);
+
+        if (containerId === 'video' && isVideo) {
+            row.className = 'video-list-item';
+            const thumb = (f.url && f.url.trim()) || (f.thumbnailLink && f.thumbnailLink.trim()) || f.webContentLink || f.webViewLink || (f.id ? getDriveImageUrl(f.id) : '') || '';
+            const duration = (f.videoMediaMetadata && f.videoMediaMetadata.durationMillis) ? formatDurationMs(f.videoMediaMetadata.durationMillis) : '';
+            const matchExact = item.matchExact || 0;
+            const scoreVal = Number(item.score || 0);
+
+            row.innerHTML = `
+                <div class="video-thumb-col">
+                    <div class="thumb-small">
+                        <img src="${thumb}" alt="${f.name}" class="video-thumb-small" />
+                        ${duration ? `<span class="duration-badge">${duration}</span>` : ``}
+                    </div>
+                </div>
+                <div class="meta-col">
+                    <div class="video-title">${f.name}</div>
+                    <div class="video-sub">Video <span class="video-debug" style="margin-left:8px;color:#666;font-size:13px">[m:${matchExact} s:${scoreVal.toFixed(2)}]</span></div>
+                </div>
+                <div class="actions-col">
+                    <button class="view-btn small video-open-btn">${hi('play-circle','hi-icon-btn')} <span>Xem</span></button>
+                    <a class="download-btn small" href="https://drive.google.com/uc?id=${f.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span></a>
+                </div>
+            `;
+
+            const openBtn = row.querySelector('.video-open-btn');
+            if (openBtn) openBtn.addEventListener('click', () => openVideoPlayer(f.id, f.name, thumb, f.webContentLink));
+
+            listFallback.appendChild(row);
+        } else {
+            row.className = 'library-search-result-item';
+            const left = document.createElement('div');
+            left.className = 'result-left';
+            const iconData = getFileIconData(f.name || '');
+            const matchExact = item.matchExact || 0;
+            const scoreVal = Number(item.score || 0);
+            left.innerHTML = `<span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span><span class="result-name">${f.name}</span><span class="result-meta" style="margin-left:10px;color:#666;font-size:13px">[m:${matchExact} s:${scoreVal.toFixed(2)}]</span>`;
+
+            const actions = document.createElement('div');
+            actions.className = 'result-actions';
+
+            if (f.mimeType === 'application/vnd.google-apps.folder') {
+                const openBtn = document.createElement('button');
+                openBtn.className = 'view-btn';
+                openBtn.innerHTML = `${hi('folder-open','hi-icon-btn')} <span>Mở</span>`;
+                openBtn.onclick = () => {
+                    if (containerId === 'library') loadFolder(f.id, f.name, false);
+                    else loadFolderCustom(f.id, f.name, false, containerId, breadcrumbId);
+                };
+                actions.appendChild(openBtn);
+            } else {
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'view-btn';
+                viewBtn.innerHTML = `${hi('eye','hi-icon-btn')} <span>Xem</span>`;
+                viewBtn.onclick = () => openPreview(f.id);
+                actions.appendChild(viewBtn);
+
+                const dl = document.createElement('a');
+                dl.className = 'download-btn';
+                dl.href = `https://drive.google.com/uc?id=${f.id}&export=download`;
+                dl.target = '_blank';
+                dl.innerHTML = `${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>`;
+                actions.appendChild(dl);
+            }
+
+            row.appendChild(left);
+            row.appendChild(actions);
+            listFallback.appendChild(row);
+        }
+    });
+
+    resultsBox.appendChild(listFallback);
 }
 
 
@@ -1045,7 +1188,8 @@ async function libraryGoBack() {
         renderFiles(files);
         const container = document.getElementById('library');
         if (container) {
-            try { container._files = await fetchFilesRecursively(snap.folderId); } catch(e){ console.warn(e); container._files = files || []; }
+            // [COPILOT-EDIT] Do not fetch recursive files on navigation; use immediate children only
+            container._files = files || [];
         }
         setupSearch('library','library-search','breadcrumb');
         renderBreadcrumb();
@@ -1066,7 +1210,8 @@ async function libraryGoForward() {
         renderFiles(files);
         const container = document.getElementById('library');
         if (container) {
-            try { container._files = await fetchFilesRecursively(snap.folderId); } catch(e){ console.warn(e); container._files = files || []; }
+            // [COPILOT-EDIT] Do not fetch recursive files on navigation; use immediate children only
+            container._files = files || [];
         }
         setupSearch('library','library-search','breadcrumb');
         renderBreadcrumb();
