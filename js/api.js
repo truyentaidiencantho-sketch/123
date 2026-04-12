@@ -77,6 +77,12 @@
             if (!data) return { results: [] };
             return data;
         },
+        async getNewsFeed(q = "", limit = 6, source = "latest") {
+            return requestJson("newsFeed", { q, limit, source });
+        },
+        getNewsArticleUrl(fileId) {
+            return buildUrl("newsArticle", { fileId });
+        },
         async exportNamedText(docKey, mimeType = "text/plain") {
             return requestText("exportDriveText", { docKey, mimeType });
         },

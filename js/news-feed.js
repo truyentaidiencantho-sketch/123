@@ -1,0 +1,230 @@
+(function (g) {
+    const api =
+        (typeof g !== "undefined" && g.APP_API) ? g.APP_API : null;
+    const DEFAULT_LIMIT = 6;
+    const ARCHIVE_LIMIT = 20;
+    let archiveLoaded = false;
+
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
+    function escapeAttr(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    function getArticleUrl(article) {
+        if (article && article.detailUrl) return article.detailUrl;
+        if (api && typeof api.getNewsArticleUrl === "function" && article && article.id) {
+            return api.getNewsArticleUrl(article.id);
+        }
+        return "#";
+    }
+
+    function renderCards(grid, articles, options = {}) {
+        if (!grid) return;
+        if (!options.append) {
+            grid.innerHTML = "";
+        }
+
+        (articles || []).forEach((article) => {
+            const card = document.createElement("a");
+            card.className = "news-card";
+            card.href = getArticleUrl(article);
+
+            const media = document.createElement("div");
+            media.className = "news-card-media";
+
+            if (article.thumbnailUrl) {
+                const img = document.createElement("img");
+                img.loading = "lazy";
+                img.decoding = "async";
+                img.src = article.thumbnailUrl;
+                img.alt = article.title || "Bản tin";
+                media.appendChild(img);
+            } else {
+                const fallback = document.createElement("div");
+                fallback.className = "news-card-media-fallback";
+                fallback.textContent = article.title || "Bản tin";
+                media.appendChild(fallback);
+            }
+
+            const body = document.createElement("div");
+            body.className = "news-card-body";
+
+            const title = document.createElement("h3");
+            title.className = "news-card-title";
+            title.textContent = article.title || "Bản tin";
+
+            const date = document.createElement("div");
+            date.className = "news-card-date";
+            date.textContent = article.publishedDateText || "";
+            if (!article.publishedDateText) {
+                date.classList.add("is-hidden");
+            }
+
+            const action = document.createElement("div");
+            action.className = "news-card-action";
+            action.textContent = "Xem chi tiết";
+
+            body.appendChild(title);
+            body.appendChild(date);
+            body.appendChild(action);
+
+            card.appendChild(media);
+            card.appendChild(body);
+            grid.appendChild(card);
+        });
+    }
+
+    function renderEmpty(grid, message) {
+        if (grid) {
+            grid.innerHTML = `
+                <div class="news-card">
+                    <div class="news-card-body">
+                        <h3 class="news-card-title">${escapeAttr(message)}</h3>
+                        <div class="news-card-action">Vui lòng thử lại với tên file khác.</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function toggleLoadMoreButton(hidden) {
+        const btn = byId("news-feed-load-more");
+        if (!btn) return;
+        btn.classList.toggle("is-hidden", Boolean(hidden));
+        btn.disabled = Boolean(hidden);
+    }
+
+    async function loadNewsFeed(query) {
+        const grid = byId("news-feed-grid");
+        const q = String(query || "").trim();
+
+        if (!api || typeof api.getNewsFeed !== "function") {
+            renderEmpty(grid, "Chưa cấu hình kết nối server bản tin.");
+            toggleLoadMoreButton(true);
+            return;
+        }
+
+        try {
+            const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
+            const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+
+            if (!articles.length) {
+                renderEmpty(
+                    grid,
+                    q ? "Không tìm thấy bản tin phù hợp." : "Chưa có bản tin để hiển thị.",
+                );
+                toggleLoadMoreButton(true);
+                return;
+            }
+
+            renderCards(grid, articles);
+            archiveLoaded = false;
+            toggleLoadMoreButton(Boolean(q));
+        } catch (error) {
+            console.warn("loadNewsFeed error", error);
+            renderEmpty(grid, "Không tải được mục bản tin.");
+            toggleLoadMoreButton(true);
+        }
+    }
+
+    async function loadArchiveNews() {
+        const grid = byId("news-feed-grid");
+        const btn = byId("news-feed-load-more");
+        const input = byId("news-feed-query");
+        if (!grid || !btn || archiveLoaded) return;
+        if ((input && input.value && input.value.trim())) return;
+
+        btn.disabled = true;
+        btn.textContent = "Đang tải...";
+
+        try {
+            const data = await api.getNewsFeed("", ARCHIVE_LIMIT, "archive");
+            const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+
+            if (articles.length) {
+                renderCards(grid, articles, { append: true });
+                archiveLoaded = true;
+                btn.textContent = "Đã hiển thị thêm";
+                btn.classList.add("is-hidden");
+            } else {
+                btn.textContent = "Không còn bản tin";
+                btn.classList.add("is-hidden");
+            }
+        } catch (error) {
+            console.warn("loadArchiveNews error", error);
+            btn.disabled = false;
+            btn.textContent = "Xem thêm";
+        }
+    }
+
+    function initNewsFeed() {
+        const input = byId("news-feed-query");
+        const submit = byId("news-feed-submit");
+        const moreLink = byId("news-feed-more");
+        const loadMoreBtn = byId("news-feed-load-more");
+        if (!input || !submit) return;
+
+        let timerId = null;
+        let isComposing = false;
+
+        const triggerSearch = () => {
+            const value = (input.value || "").trim();
+            loadNewsFeed(value);
+        };
+
+        submit.addEventListener("click", () => {
+            clearTimeout(timerId);
+            triggerSearch();
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                clearTimeout(timerId);
+                triggerSearch();
+            }
+        });
+
+        input.addEventListener("compositionstart", () => {
+            isComposing = true;
+        });
+
+        input.addEventListener("compositionend", () => {
+            isComposing = false;
+            clearTimeout(timerId);
+            timerId = setTimeout(triggerSearch, 120);
+        });
+
+        input.addEventListener("input", () => {
+            if (isComposing) return;
+            clearTimeout(timerId);
+            timerId = setTimeout(triggerSearch, 260);
+        });
+
+        if (moreLink) {
+            moreLink.addEventListener("click", (event) => {
+                event.preventDefault();
+                const navLink = document.getElementById("tm-gallery-link") ||
+                    document.querySelector('a[href="#gallery"]');
+                if (navLink) navLink.click();
+            });
+        }
+
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener("click", () => {
+                loadArchiveNews();
+            });
+        }
+
+        loadNewsFeed("");
+    }
+
+    document.addEventListener("DOMContentLoaded", initNewsFeed);
+})(typeof window !== "undefined" ? window : globalThis);

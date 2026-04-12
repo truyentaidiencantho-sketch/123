@@ -494,8 +494,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const libraryLink = document.querySelector('a[href="#library-popup"]');
     const closeBtn = document.querySelector("#library-popup .tm-close-popup");
 
-    // Setup "Bản tin & Kế hoạch" popup to load from Drive
-    const galleryLink = document.querySelector('a[href="#gallery"]');
+    // Setup "Bản tin & Kế hoạch" popup to load from Drive (select by id so href can be external)
+    const galleryLink = document.querySelector('#tm-gallery-link');
 
     if (libraryLink) {
         libraryLink.addEventListener("click", function (e) {
@@ -505,15 +505,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (galleryLink) {
-        galleryLink.addEventListener('click', function (e) {
-            e.preventDefault();
-            openCustomRoot(
-                ROOT_KEYS.news,
-                'Bản tin & Kế hoạch',
-                'bantin',
-                'bantin-breadcrumb',
-            );
-        });
+        // If the nav link points to an external Drive URL, let the browser navigate there.
+        const galleryHref = galleryLink.getAttribute('href') || '';
+        if (!/^https?:\/\//i.test(galleryHref)) {
+            galleryLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                openCustomRoot(
+                    ROOT_KEYS.news,
+                    'Bản tin & Kế hoạch',
+                    'bantin',
+                    'bantin-breadcrumb',
+                );
+            });
+        }
     }
 
     if (closeBtn) {
