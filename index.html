@@ -32,7 +32,7 @@
               "alternateName": "Tài liệu bồi huấn Truyền tải điện Cần Thơ",
               "url": "https://truyentaidiencantho.cloud/",
               "logo": "https://truyentaidiencantho.cloud/img/logo1.webp",
-              "email": "tranphat.truyentai@gmail.com",
+              "email": "truyentaidiencantho@gmail.com",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "Số 41 đường 3/2",
@@ -43,7 +43,7 @@
               "contactPoint": [
                 {
                   "@type": "ContactPoint",
-                  "email": "tranphat.truyentai@gmail.com",
+                  "email": "truyentaidiencantho@gmail.com",
                   "contactType": "customer service",
                   "areaServed": "VN",
                   "availableLanguage": ["vi"]
@@ -286,6 +286,32 @@
             <!-- Quảng cáo / Banners (gallery2) -->
             <div id="gallery2" class="gallery2"></div>
 
+            <section class="news-feed-section" aria-labelledby="news-feed-heading">
+                <div class="news-feed-shell">
+                    <div class="news-feed-topbar">
+                        <div>
+                       
+                            <h2 id="news-feed-heading" class="news-feed-heading">Bản tin nổi bật</h2>
+                        </div>
+                       
+                    </div>
+
+                    <div class="news-feed-search">
+                        <label class="news-feed-search-label" for="news-feed-query">Thanh công cụ tìm kiếm</label>
+                        <div class="news-feed-search-box">
+                            <input id="news-feed-query" type="search" class="news-feed-input" placeholder="Nhập tên bản tin..." autocomplete="off">
+                            <button id="news-feed-submit" type="button" class="news-feed-submit">Tìm kiếm</button>
+                        </div>
+                    
+                    </div>
+
+                    <div id="news-feed-grid" class="news-feed-grid"></div>
+                    <div class="news-feed-actions">
+                        <button id="news-feed-load-more" type="button" class="news-feed-load-more">Xem thêm</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- ================= THƯ VIỆN GOOGLE DRIVE ================= -->
             <div id="library-popup" class="popup mfp-with-anim mfp-hide tm-bg-gray">
                 <a href="#" class="tm-close-popup">Trở về <img src="https://unpkg.com/heroicons@2.1.5/24/outline/x-mark.svg" alt="" class="icon-inline"></a>
@@ -349,6 +375,7 @@
         <script src="js/jquery.magnific-popup.min.js" defer></script>
         <script src="js/api.js" defer></script>
         <script src="js/library.js" defer></script>
+        <script src="js/news-feed.js" defer></script>
         <script src="js/templatemo-script.js" defer></script>
         <script src="js/video-player.js" defer></script>
 
