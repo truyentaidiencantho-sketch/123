@@ -54,6 +54,12 @@ const GALLERY_WINDOW = 8; // number of images visible at once (4 columns × 2 ro
 const GALLERY_INTERVAL = 3500; // ms between updates
 let galleryObserver = null;
 
+// In-memory set of gallery image URLs that have already loaded once.
+const galleryLoadedUrls = new Set();
+// Pool of currently-displayed slots (wrapper + img) to avoid recreating DOM nodes.
+let galleryImagePool = [];
+let galleryPoolInitialized = false;
+
 function getGalleryObserver() {
     if (galleryObserver) return galleryObserver;
     galleryObserver = new IntersectionObserver((entries) => {
@@ -95,45 +101,89 @@ function renderGalleryWindow() {
 
     const itemsToShow = Math.min(GALLERY_WINDOW, len);
 
-    // Rebuild flat gallery children each cycle to avoid leftover nested rows
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < itemsToShow; i++) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'gallery-item';
-        wrapper.style.position = 'relative';
+    // Initialize a fixed pool of wrappers+img elements on first run.
+    if (!galleryPoolInitialized) {
+        gallery.innerHTML = '';
+        galleryImagePool = [];
+        for (let i = 0; i < itemsToShow; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'gallery-item';
+            wrapper.style.position = 'relative';
 
+            const img = document.createElement('img');
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.alt = '';
+            img.className = 'gallery-current';
+            img.style.cursor = 'pointer';
+            img.dataset.upgraded = '0';
+
+            // click opens preview
+            img.addEventListener('click', () => {
+                const full = img.getAttribute('data-full') || img.getAttribute('data-src') || '';
+                if (typeof openDirectPreview === 'function') {
+                    openDirectPreview(full, 'Ảnh quảng cáo');
+                }
+            });
+
+            wrapper.appendChild(img);
+            gallery.appendChild(wrapper);
+            galleryImagePool.push({ wrapper, img });
+
+            const obs = getGalleryObserver();
+            if (obs) obs.observe(img);
+        }
+        galleryPoolInitialized = true;
+    }
+
+    // Reuse pool slots and image elements; cache loaded images so we don't re-download the same URL.
+    for (let i = 0; i < itemsToShow; i++) {
         const idx = (galleryStartIndex + i) % len;
         const item = imageItems[idx];
         if (!item) continue;
 
-        const img = document.createElement('img');
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.src = item.thumb || item.full;
-        img.setAttribute('data-src', item.thumb || item.full);
-        img.setAttribute('data-full', item.full || item.thumb);
-        img.alt = '';
-        img.className = 'gallery-current';
-        img.style.cursor = 'pointer';
+        const url = ((item.thumb && item.thumb.trim()) || (item.full && item.full.trim()) || '');
+        if (!url) continue;
 
-        // Mở ảnh ở kích thước gốc trong modal preview khi bấm
-        img.addEventListener('click', () => {
-            if (typeof openDirectPreview === 'function') {
-                openDirectPreview(item.full || item.thumb, 'Ảnh quảng cáo');
-            }
-        });
+        const slot = galleryImagePool[i];
+        if (!slot) continue;
 
-        wrapper.appendChild(img);
-        frag.appendChild(wrapper);
+        // If this URL has already loaded before, just assign the src (will use browser cache)
+        if (galleryLoadedUrls.has(url)) {
+            slot.img.setAttribute('data-src', url);
+            slot.img.setAttribute('data-full', item.full || item.thumb || '');
+            // ensure observer sees data-full so it can swap to high-res when visible
+            try { const obs = getGalleryObserver(); if (obs) obs.observe(slot.img); } catch (e) {}
+            // Assign src; browsers normally serve from cache so this avoids re-downloading where possible
+            try { slot.img.src = url; } catch (e) { slot.img.dataset.upgraded = 'err'; }
+            continue;
+        }
 
-        // Swap lên ảnh nét khi phần tử vào khung nhìn
-        const obs = getGalleryObserver();
-        if (obs) obs.observe(img);
+        // Not cached yet — update the slot's img only if it's different to avoid forcing re-request.
+        if (slot.img.getAttribute('data-src') === url || slot.img.src === url) {
+            slot.img.setAttribute('data-full', item.full || item.thumb || '');
+            continue;
+        }
+
+        // Assign new URL and cache the loaded element on first successful load.
+        slot.img.dataset.upgraded = '0';
+        slot.img.setAttribute('data-src', url);
+        slot.img.setAttribute('data-full', item.full || item.thumb || '');
+        slot.img.onload = function onLoad() {
+            try { slot.img.classList.add('img-loaded'); } catch (e) {}
+            slot.img.dataset.upgraded = '1';
+            // mark URL as loaded so future cycles reuse browser cache instead of forcing network
+            try { galleryLoadedUrls.add(url); } catch (e) {}
+            // stop observing once image upgraded
+            try { const obs = getGalleryObserver(); if (obs) obs.unobserve(slot.img); } catch (e) {}
+            slot.img.removeEventListener('load', onLoad);
+        };
+        slot.img.onerror = function () {
+            slot.img.dataset.upgraded = 'err';
+        };
+        // set src last so events can attach beforehand
+        try { slot.img.src = url; } catch (e) { slot.img.dataset.upgraded = 'err'; }
     }
-
-    // replace current children with new set
-    gallery.innerHTML = '';
-    gallery.appendChild(frag);
 
     // advance start index so next rotation shows the next set
     galleryStartIndex = (galleryStartIndex + 1) % len;
