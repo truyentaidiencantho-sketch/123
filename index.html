@@ -232,23 +232,25 @@
                 .video-title { font-size:16px !important; font-weight:800 !important; white-space:normal !important; overflow:visible !important; overflow-wrap:anywhere !important; word-break:break-word !important; }
                 .video-sub { margin-top:6px; color:#6b7280; font-size:14px; }
 
-                .actions-col { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; display:flex !important; gap:6px !important; flex-wrap:nowrap !important; justify-content:flex-start !important; width:100% !important; box-sizing:border-box !important; overflow:hidden !important; }
+                .actions-col { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; display:flex !important; gap:8px !important; flex-wrap:nowrap !important; justify-content:flex-start !important; width:100% !important; box-sizing:border-box !important; overflow:visible !important; }
                 .video-list-item { overflow:visible !important; }
                 .video-list-item .actions-col .view-btn,
                 .video-list-item .actions-col .download-btn {
-                    width: auto !important;
-                    max-width: calc(40% - 6px) !important;
-                    flex: 0 1 auto !important;
+                    /* keep both buttons on one row; reduce text size and prevent wrapping */
+                    flex: 0 0 calc(50% - 6px) !important;
+                    width: calc(50% - 6px) !important;
+                    min-width: 0 !important;
                     padding:6px 8px !important;
-                    font-size:13px !important;
+                    font-size:12px !important;
                     border-radius:8px !important;
-                    height:38px !important;
+                    height: auto !important;
                     line-height:1 !important;
                     box-sizing:border-box !important;
-                    white-space:nowrap !important;
-                    overflow:hidden !important;
-                    text-overflow:ellipsis !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
                 }
+                .video-list-item .actions-col .hi-icon-btn { width:14px !important; height:14px !important; }
                 /* make icons inside buttons smaller on mobile */
                 .video-list-item .actions-col .hi-icon-btn { width:14px !important; height:14px !important; }
 
