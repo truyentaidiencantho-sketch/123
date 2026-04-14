@@ -78,8 +78,22 @@
         <style>
             /* Library UI overrides (kept minimal; main styling in CSS file) */
             .library-item { padding:16px 18px; border:1px solid #eef2f7; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:0 10px 22px rgba(16,24,40,0.08); margin-bottom:12px; }
-            .library-left { display:flex; align-items:center; gap:14px; min-width:0; font-size:18px; font-weight:800; color:#0f172a; }
-            .file-name, .folder-name { font-weight:800; font-size:18px; color:#0f172a; }
+            .library-left { display:flex; align-items:center; gap:14px; min-width:0; flex:1 1 auto; font-size:18px; font-weight:800; color:#0f172a; }
+            .file-name, .folder-name { font-weight:800; font-size:18px; color:#0f172a; display:block; white-space:normal !important; word-break:normal !important; overflow-wrap:break-word !important; hyphens:auto; line-height:1.25; }
+
+            /* Stronger rule: ensure library names never break into single letters
+               by overriding any aggressive break rules from other stylesheets. */
+            .library-left .file-name, .library-left .folder-name,
+            .meta-col .file-name, .meta-col .folder-name,
+            .library-search-result-item .result-name, .result-left .result-name,
+            .result-name {
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: break-word !important;
+                hyphens: auto !important;
+                letter-spacing: normal !important;
+                line-height: 1.25 !important;
+            }
             .library-folder { cursor:pointer; }
             .folder-name { font-weight:700; }
             .library-actions { display:flex; gap:10px; }
@@ -138,22 +152,47 @@
                 border: 0;
             }
 
-            #previewModal .preview-close {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                z-index: 1001;
-                background: rgba(255,255,255,0.98);
-                color: #111;
-                border-radius: 6px;
-                padding: 8px 10px;
-                border: 0;
-                cursor: pointer;
-                font-size: 16px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            /* Prominent close buttons for previews and video player */
+            #previewModal .preview-close,
+            .vp-close,
+            .mfp-close {
+                position: absolute !important;
+                top: 10px !important;
+                right: 10px !important;
+                z-index: 10050 !important;
+                background: #dc2626 !important; /* red-600 */
+                color: #ffffff !important;
+                border-radius: 8px !important;
+                width: 44px !important;
+                height: 44px !important;
+                padding: 0 !important;
+                border: 0 !important;
+                cursor: pointer !important;
+                font-size: 20px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-shadow: 0 8px 20px rgba(220,38,38,0.28) !important;
             }
 
-            #previewModal .preview-close:hover { background:#f7f7f7; }
+            #previewModal .preview-close::after,
+            .vp-close::after,
+            .mfp-close::after {
+                content: '';
+            }
+
+            #previewModal .preview-close:hover,
+            .vp-close:hover,
+            .mfp-close:hover {
+                transform: translateY(-2px) scale(1.02);
+                box-shadow: 0 12px 28px rgba(220,38,38,0.36) !important;
+            }
+
+            /* Ensure magnified popup default close icon (if present) inherits our color */
+            .mfp-close {
+                color: #fff !important;
+                text-decoration: none !important;
+            }
             /* Video gallery styles */
             .video-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:22px; }
             .video-thumb-item { background:#fff; border-radius:12px; padding:12px; box-shadow:0 8px 18px rgba(0,0,0,0.08); }
@@ -336,7 +375,7 @@
                 }
                 .thumb-col { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
                 .thumb-col .icon-pill { width:40px !important; height:40px !important; }
-                .meta-col .file-name, .meta-col .folder-name, .library-search-result-item .result-name { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; font-size:15px !important; white-space: normal !important; overflow: visible !important; word-break:break-word !important; }
+                .meta-col .file-name, .meta-col .folder-name, .library-search-result-item .result-name { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; font-size:15px !important; white-space: normal !important; overflow: visible !important; word-break: normal !important; overflow-wrap: break-word !important; hyphens: auto !important; }
                 .library-actions { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; display:flex !important; gap:8px !important; justify-content:flex-start !important; flex-wrap:nowrap !important; }
                 .library-item .library-actions .view-btn, .library-item .library-actions .download-btn, .library-search-result-item .view-btn, .library-search-result-item .download-btn {
                     padding: 6px 8px !important;
@@ -392,6 +431,69 @@
             #backToTop:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(15,23,42,0.22); }
             #backToTop svg { width: 20px; height: 20px; fill: #fff; display: block; }
             @media (max-width: 360px) { #backToTop { width:40px; height:40px; right:12px; bottom:12px; } #backToTop svg { width:16px; height:16px; } }
+
+            /* Extra overrides: ensure library action buttons are compact on small screens
+               and folder rows do not reserve extra action space. These selectors
+               target popup content specifically and use !important to win over
+               theme rules that may be loaded later. */
+            @media (max-width: 600px) {
+                .mfp-content #library .library-item .library-actions .view-btn,
+                .mfp-content #library .library-item .library-actions .download-btn,
+                .mfp-content .library-search-result-item .view-btn,
+                .mfp-content .library-search-result-item .download-btn,
+                .popup #library .view-btn,
+                .popup #library .download-btn,
+                #library .view-btn,
+                #library .download-btn {
+                    padding: 6px 8px !important;
+                    font-size: 12px !important;
+                    height: 34px !important;
+                    min-width: 0 !important;
+                    max-width: calc(50% - 6px) !important;
+                    gap: 8px !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                    line-height: 1 !important;
+                }
+                .mfp-content #library .hi-icon-btn, .popup #library .hi-icon-btn, #library .hi-icon-btn { width: 14px !important; height: 14px !important; }
+                .mfp-content #library .view-btn span, .mfp-content #library .download-btn span, #library .view-btn span, #library .download-btn span { display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:72px; }
+                .mfp-content #library .download-btn { line-height: 1 !important; }
+                /* hide any empty actions column reserved for folders inside popup */
+                .mfp-content #library .library-folder .library-actions, .popup #library .library-folder .library-actions { display:none !important; }
+
+                /* Make action buttons equal width inside library popup on small screens */
+                .mfp-content #library .library-actions, .mfp-content .library-search-result-item .result-actions, .popup #library .library-actions, #library .library-actions {
+                    display:flex !important;
+                    gap:8px !important;
+                    align-items:center !important;
+                    justify-content:flex-start !important;
+                }
+                .mfp-content #library .library-actions .view-btn, .mfp-content #library .library-actions .download-btn,
+                .mfp-content .library-search-result-item .result-actions .view-btn, .mfp-content .library-search-result-item .result-actions .download-btn,
+                .popup #library .view-btn, .popup #library .download-btn, #library .view-btn, #library .download-btn {
+                    display:inline-flex !important;
+                    box-sizing:border-box !important;
+                    align-items:center !important;
+                    justify-content:center !important;
+                    flex:1 1 0 !important;
+                    min-width:0 !important;
+                    height:36px !important;
+                    padding:6px 10px !important;
+                    font-size:13px !important;
+                    white-space:nowrap !important;
+                    overflow:hidden !important;
+                    text-overflow:ellipsis !important;
+                    border-radius:8px !important;
+                }
+                .mfp-content #library .download-btn, .popup #library .download-btn, #library .download-btn { text-decoration:none !important; color:#fff !important; }
+                .mfp-content #library .hi-icon-btn, .popup #library .hi-icon-btn, #library .hi-icon-btn { width:16px !important; height:16px !important; margin-right:8px !important; }
+                .mfp-content #library .view-btn span, .mfp-content #library .download-btn span, .popup #library .view-btn span, .popup #library .download-btn span { display:inline-block; max-width:80%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+            }
 
         </style>
     </head>
