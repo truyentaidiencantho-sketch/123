@@ -1,0 +1,20 @@
+{
+  "name": "Tài liệu bồi huấn Truyền tải điện Cần Thơ",
+  "short_name": "TruyentaiCT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/img/iconweb.webp",
+      "sizes": "192x192",
+      "type": "image/webp"
+    },
+    {
+      "src": "/img/iconweb.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
