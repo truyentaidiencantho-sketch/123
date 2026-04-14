@@ -3,7 +3,20 @@
         (typeof g !== "undefined" && g.APP_API) ? g.APP_API : null;
     const DEFAULT_LIMIT = 6;
     const ARCHIVE_LIMIT = 20;
+    const ARCHIVE_CONTAINER_ID = "news-feed-archive-container";
     let archiveLoaded = false;
+    let archiveVisible = false;
+
+    function getArchiveContainer(grid) {
+        let container = byId(ARCHIVE_CONTAINER_ID);
+        if (!container) {
+            container = document.createElement("div");
+            container.id = ARCHIVE_CONTAINER_ID;
+            container.className = "news-archive-container";
+            grid.appendChild(container);
+        }
+        return container;
+    }
 
     function byId(id) {
         return document.getElementById(id);
@@ -33,8 +46,8 @@
 
         (articles || []).forEach((article) => {
             const card = document.createElement("a");
-            card.className = "news-card";
-            card.href = getArticleUrl(article);
+                card.className = "news-card";
+                card.href = getArticleUrl(article);
 
             const media = document.createElement("div");
             media.className = "news-card-media";
@@ -112,6 +125,53 @@
         }
 
         try {
+            // If streaming API is available, render each article as it arrives.
+            if (api && typeof api.streamNewsFeed === "function") {
+                grid.innerHTML = ""; // clear grid immediately
+                let any = false;
+                let buffer = [];
+                let flushTimer = null;
+                const FLUSH_DELAY = 60; // ms
+
+                function flushBuffer() {
+                    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+                    if (buffer.length) {
+                        try {
+                            renderCards(grid, buffer, { append: true });
+                        } catch (e) {
+                            console.warn('batch render failed', e);
+                        }
+                        buffer = [];
+                    }
+                }
+
+                await api.streamNewsFeed(q, DEFAULT_LIMIT, "latest", (article) => {
+                    buffer.push(article);
+                    any = true;
+                    if (!flushTimer) {
+                        flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                    }
+                });
+
+                // flush remaining
+                flushBuffer();
+
+                if (!any) {
+                    renderEmpty(
+                        grid,
+                        q ? "Không tìm thấy bản tin phù hợp." : "Chưa có bản tin để hiển thị.",
+                    );
+                    toggleLoadMoreButton(true);
+                    return;
+                }
+
+                archiveLoaded = false;
+                archiveVisible = false;
+                toggleLoadMoreButton(Boolean(q));
+                return;
+            }
+
+            // Fallback: existing API that returns all articles at once
             const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
             const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
 
@@ -126,6 +186,7 @@
 
             renderCards(grid, articles);
             archiveLoaded = false;
+            archiveVisible = false;
             toggleLoadMoreButton(Boolean(q));
         } catch (error) {
             console.warn("loadNewsFeed error", error);
@@ -145,17 +206,59 @@
         btn.textContent = "Đang tải...";
 
         try {
-            const data = await api.getNewsFeed("", ARCHIVE_LIMIT, "archive");
-            const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+            if (api && typeof api.streamNewsFeed === "function") {
+                let any = false;
+                let buffer = [];
+                let flushTimer = null;
+                const FLUSH_DELAY = 60; // ms
+                const container = getArchiveContainer(grid);
 
-            if (articles.length) {
-                renderCards(grid, articles, { append: true });
-                archiveLoaded = true;
-                btn.textContent = "Đã hiển thị thêm";
-                btn.classList.add("is-hidden");
+                function flushBuffer() {
+                    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+                    if (buffer.length) {
+                        try {
+                            renderCards(container, buffer, { append: true });
+                        } catch (e) {
+                            console.warn('batch render failed', e);
+                        }
+                        buffer = [];
+                    }
+                }
+
+                await api.streamNewsFeed("", ARCHIVE_LIMIT, "archive", (article) => {
+                    buffer.push(article);
+                    any = true;
+                    if (!flushTimer) {
+                        flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                    }
+                });
+
+                flushBuffer();
+
+                if (any) {
+                    archiveLoaded = true;
+                    archiveVisible = true;
+                    btn.textContent = "Thu gọn";
+                    btn.disabled = false;
+                } else {
+                    btn.textContent = "Không còn bản tin";
+                    btn.disabled = true;
+                }
             } else {
-                btn.textContent = "Không còn bản tin";
-                btn.classList.add("is-hidden");
+                const data = await api.getNewsFeed("", ARCHIVE_LIMIT, "archive");
+                const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+
+                if (articles.length) {
+                    const container = getArchiveContainer(grid);
+                    renderCards(container, articles, { append: true });
+                    archiveLoaded = true;
+                    archiveVisible = true;
+                    btn.textContent = "Thu gọn";
+                    btn.disabled = false;
+                } else {
+                    btn.textContent = "Không còn bản tin";
+                    btn.disabled = true;
+                }
             }
         } catch (error) {
             console.warn("loadArchiveNews error", error);
@@ -219,7 +322,16 @@
 
         if (loadMoreBtn) {
             loadMoreBtn.addEventListener("click", () => {
-                loadArchiveNews();
+                const grid = byId("news-feed-grid");
+                if (!archiveLoaded) {
+                    loadArchiveNews();
+                    return;
+                }
+
+                const container = getArchiveContainer(grid);
+                archiveVisible = !archiveVisible;
+                container.classList.toggle("is-hidden", !archiveVisible);
+                loadMoreBtn.textContent = archiveVisible ? "Thu gọn" : "Xem thêm";
             });
         }
 

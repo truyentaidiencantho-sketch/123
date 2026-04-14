@@ -80,6 +80,43 @@
         async getNewsFeed(q = "", limit = 6, source = "latest") {
             return requestJson("newsFeed", { q, limit, source });
         },
+        // getSiteAnalytics removed (Cloudflare approach disabled)
+        async streamNewsFeed(q = "", limit = 6, source = "latest", onArticle) {
+            const url = buildUrl("newsFeedStream", { q, limit, source });
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`${res.status}`);
+
+            // If the runtime doesn't support streaming, fall back to full JSON parse
+            if (!res.body) {
+                const text = await res.text();
+                if (!text) return;
+                const lines = text.split('\n').filter(Boolean);
+                for (const line of lines) {
+                    try { onArticle(JSON.parse(line)); } catch (e) { /* ignore */ }
+                }
+                return;
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+                const parts = buf.split('\n');
+                buf = parts.pop();
+                for (const line of parts) {
+                    if (!line || !line.trim()) continue;
+                    try { onArticle(JSON.parse(line)); } catch (e) { /* ignore malformed chunk */ }
+                }
+            }
+
+            if (buf && buf.trim()) {
+                try { onArticle(JSON.parse(buf)); } catch (e) { /* ignore */ }
+            }
+        },
         getNewsArticleUrl(fileId) {
             return buildUrl("newsArticle", { fileId });
         },
