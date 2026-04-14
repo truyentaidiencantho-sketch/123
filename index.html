@@ -75,6 +75,7 @@
             /* Library UI overrides (kept minimal; main styling in CSS file) */
             .library-item { padding:16px 18px; border:1px solid #eef2f7; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; box-shadow:0 10px 22px rgba(16,24,40,0.08); margin-bottom:12px; }
             .library-left { display:flex; align-items:center; gap:14px; min-width:0; font-size:18px; font-weight:800; color:#0f172a; }
+            .file-name, .folder-name { font-weight:800; font-size:18px; color:#0f172a; }
             .library-folder { cursor:pointer; }
             .folder-name { font-weight:700; }
             .library-actions { display:flex; gap:10px; }
@@ -196,11 +197,196 @@
                 .actions-col { width:100%; }
             }
 
+            /* Mobile improvements: keep a compact grid and ensure titles are fully visible */
+            @media (max-width: 600px) {
+                /* Video grid: compact but retain multiple columns if space; adjust heights */
+                .video-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); gap:12px; }
+                .video-thumb { height:160px; }
+                .video-thumb-item { padding:10px; }
+
+                /* Allow titles to wrap instead of truncating */
+                .video-title {
+                    white-space: normal !important;
+                    overflow: visible !important;
+                    text-overflow: unset !important;
+                    font-size:15px !important;
+                    line-height:1.2 !important;
+                    display:block !important;
+                }
+
+                /* Use CSS Grid for each list row: thumbnail left, title right, actions below the title */
+                .video-list-item {
+                    display: grid !important;
+                    grid-template-columns: 96px 1fr !important;
+                    grid-template-rows: auto auto !important;
+                    gap: 8px 12px !important;
+                    align-items: start !important;
+                    padding: 10px !important;
+                }
+
+                .video-thumb-col { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; }
+                .thumb-small { width:96px !important; height:96px !important; border-radius:8px !important; overflow:hidden !important; }
+                .video-thumb-small { width:100% !important; height:100% !important; object-fit:cover !important; display:block !important; }
+
+                .meta-col { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; padding: 0 !important; }
+                .video-title { font-size:16px !important; font-weight:800 !important; white-space:normal !important; overflow:visible !important; overflow-wrap:anywhere !important; word-break:break-word !important; }
+                .video-sub { margin-top:6px; color:#6b7280; font-size:14px; }
+
+                .actions-col { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; display:flex !important; gap:6px !important; flex-wrap:nowrap !important; justify-content:flex-start !important; width:100% !important; box-sizing:border-box !important; overflow:hidden !important; }
+                .video-list-item { overflow:visible !important; }
+                .video-list-item .actions-col .view-btn,
+                .video-list-item .actions-col .download-btn {
+                    width: auto !important;
+                    max-width: calc(40% - 6px) !important;
+                    flex: 0 1 auto !important;
+                    padding:6px 8px !important;
+                    font-size:13px !important;
+                    border-radius:8px !important;
+                    height:38px !important;
+                    line-height:1 !important;
+                    box-sizing:border-box !important;
+                    white-space:nowrap !important;
+                    overflow:hidden !important;
+                    text-overflow:ellipsis !important;
+                }
+                /* make icons inside buttons smaller on mobile */
+                .video-list-item .actions-col .hi-icon-btn { width:14px !important; height:14px !important; }
+
+                /* Duration badge sizing */
+                .duration-badge { bottom:6px !important; right:6px !important; font-size:12px !important; padding:3px 6px !important; border-radius:6px !important; }
+            }
+
+            @media (max-width: 360px) {
+                /* Very small screens: fallback to 1 column to keep legibility */
+                .video-grid { grid-template-columns: repeat(1, 1fr); }
+            }
+
+            /* Keep desktop-like multi-column layout on mobile while allowing text to wrap.
+               These overrides are intentionally specific and use !important so desktop
+               styles are not affected. */
+            @media (max-width: 600px) {
+                /* Header / hero adjustments: make header image span full width on mobile */
+                .tm-site-header { padding: 12px 0 8px !important; }
+                .image-container4 { width: 100% !important; max-width: 100% !important; height: auto !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; overflow: hidden !important; }
+                .image-container4 picture, .image-container4 img { width: 100% !important; height: auto !important; object-fit: cover !important; display: block !important; }
+
+                /* Make section heading smaller and force single line */
+                .tm-section-heading { font-size: 24px !important; white-space: nowrap !important; overflow: visible !important; line-height:1 !important; }
+
+                /* Nav hero: keep 3 columns, shrink icons and allow titles to wrap slightly */
+                .tm-main-nav ul {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 12px !important;
+                    padding: 0 !important;
+                    margin: 8px 0 0 !important;
+                }
+                .tm-main-nav .tm-nav-item { flex: none !important; width: auto !important; }
+                .tm-nav-link {
+                    height: auto !important;
+                    min-height: 96px !important;
+                    padding: 10px 8px !important;
+                    white-space: normal !important;
+                    font-size: 14px !important;
+                }
+                .tm-nav-link .nav-icon { width: 60px !important; height: 60px !important; margin-bottom: 6px !important; }
+                .tm-nav-link .nav-icon img { width: 28px !important; height: 28px !important; }
+
+                /* Gallery2 images: force 4 columns (2 rows of 4 when 8 items present) and remove large white gaps */
+                .gallery2 { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; padding: 6px !important; grid-auto-rows: 120px !important; align-items: stretch !important; }
+                .gallery2 .gallery-item { min-height: 0 !important; padding: 0 !important; display: block !important; overflow: hidden !important; border-radius: 10px !important; }
+                .gallery2 .gallery-item img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+
+                /* News feed: single column for readability */
+                .news-feed-grid { grid-template-columns: 1fr !important; gap:12px !important; }
+                .news-card-title { font-size: 16px !important; line-height:1.2 !important; white-space: normal !important; }
+
+                /* Video grid: 3 columns; titles wrap */
+                .video-grid { grid-template-columns: repeat(3, minmax(120px,1fr)) !important; gap:12px !important; }
+                .video-thumb { height: 120px !important; object-fit: cover !important; }
+                .video-title { white-space: normal !important; overflow: visible !important; font-size: 14px !important; }
+
+                /* Library items: allow file names to break to multiple lines */
+                .library-left .file-name, .library-left .folder-name, .library-search-result-item .result-name {
+                    white-space: normal !important;
+                    overflow: visible !important;
+                    text-overflow: unset !important;
+                    font-size: 15px !important;
+                }
+                .library-item { padding: 10px !important; }
+                .library-search-result-item .view-btn, .library-search-result-item .download-btn, .library-item .library-actions .view-btn, .library-item .library-actions .download-btn {
+                    width: auto !important; min-width: 82px !important; padding: 8px 10px !important; font-size: 15px !important;
+                }
+
+                /* Mobile: make library/list items compact and prevent action buttons overflowing
+                   Layout: small icon on left, file name (wrap) on right, actions as a single row below title */
+                .library-item, .library-search-result-item {
+                    display: grid !important;
+                    grid-template-columns: 48px 1fr !important;
+                    grid-template-rows: auto auto !important;
+                    gap: 8px 12px !important;
+                    align-items: start !important;
+                    padding: 10px !important;
+                }
+                .thumb-col { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+                .thumb-col .icon-pill { width:40px !important; height:40px !important; }
+                .meta-col .file-name, .meta-col .folder-name, .library-search-result-item .result-name { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; font-size:15px !important; white-space: normal !important; overflow: visible !important; word-break:break-word !important; }
+                .library-actions { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; display:flex !important; gap:8px !important; justify-content:flex-start !important; flex-wrap:nowrap !important; }
+                .library-item .library-actions .view-btn, .library-item .library-actions .download-btn, .library-search-result-item .view-btn, .library-search-result-item .download-btn {
+                    padding: 6px 8px !important;
+                    font-size: 13px !important;
+                    min-width: 0 !important;
+                    max-width: calc(50% - 6px) !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                    height: 36px !important;
+                    border-radius: 8px !important;
+                }
+            }
+
             /* Player modal */
             .video-player-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); z-index:100000; padding:20px; width:100%; height:100%; overflow:auto; }
             .video-player-wrap { width:calc(100% - 24px); max-width:1320px; background:#000; border-radius:10px; padding:14px; position:relative; display:flex; flex-direction:column; gap:10px; align-items:stretch; }
             .vp-close { position:absolute; right:12px; top:12px; z-index:3; font-size:20px; color:#fff; background:transparent; border:0; cursor:pointer; }
             #plyr-video { width:100%; height:78vh; max-height:90vh; background:#000; border-radius:8px; display:block; }
+
+            /* Mobile: display intro popup as a single column (image on top) and use
+               single-column text flow so lines do not break awkwardly. */
+            @media (max-width: 600px) {
+                #intro.popup { max-width: 98vw !important; padding: 12px !important; }
+                #intro .tm-intro-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; overflow: auto !important; }
+                #intro .tm-intro-col-l { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+                #intro .tm-intro-col-mid { flex: 0 0 auto !important; width: 100% !important; min-width: 0 !important; }
+                #intro .tm-intro-col-mid .intro-columns { column-count: 1 !important; column-gap: 0 !important; max-height: none !important; overflow: visible !important; }
+                #intro .tm-intro-img { width: 100% !important; height: auto !important; max-height: 25vh !important; object-fit: cover !important; border-radius: 10px !important; }
+                #intro .tm-intro-col-mid .intro-columns p,
+                #intro .tm-intro-col-mid .intro-columns li { word-break: normal !important; overflow-wrap: normal !important; hyphens: auto !important; }
+            }
+
+            /* Back to top floating button (fixed on the right, always visible) */
+            #backToTop {
+                position: fixed;
+                right: 18px;
+                bottom: 20px;
+                width: 48px;
+                height: 48px;
+                background: linear-gradient(135deg,#0ea5e9,#1976d2);
+                color: #fff;
+                border: 0;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 8px 20px rgba(15,23,42,0.18);
+                cursor: pointer;
+                z-index: 10000;
+                transition: transform .12s ease, box-shadow .12s ease;
+            }
+            #backToTop:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(15,23,42,0.22); }
+            #backToTop svg { width: 20px; height: 20px; fill: #fff; display: block; }
+            @media (max-width: 360px) { #backToTop { width:40px; height:40px; right:12px; bottom:12px; } #backToTop svg { width:16px; height:16px; } }
+
         </style>
     </head>
     <body>
@@ -245,9 +431,6 @@
                     </ul>
                 </nav>
             </div>
-
-            <br>
-            <br>
 
             <!-- INTRO POPUP -->
             <div id="intro" class="popup mfp-with-anim mfp-hide tm-bg-gray">
@@ -388,7 +571,20 @@
                     <iframe id="previewFrame" style="display:none;" frameborder="0" allowfullscreen></iframe>
                 </div>
             </div>
-        </div>
-    </body>
+            </div>
+    
+        <!-- Back to top button -->
+        <button id="backToTop" aria-label="Lên đầu trang" title="Lên đầu trang">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 8h6v8h4v-8h6z"/></svg>
+        </button>
+
+        <script>
+        (function(){
+            var btn = document.getElementById('backToTop');
+            if(!btn) return;
+            btn.addEventListener('click', function(e){ e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'}); });
+        })();
+        </script>
+        </body>
 </html>
 
