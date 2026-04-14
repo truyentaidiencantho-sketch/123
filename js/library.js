@@ -694,9 +694,11 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
             if (file.mimeType === 'application/vnd.google-apps.folder') {
                 div.className = 'library-item library-folder';
                 div.innerHTML = `
-                    <div class="library-left">
+                    <div class="thumb-col">
                         <span class="icon-pill pill-folder">${hi('folder')}</span>
-                        <span class="folder-name">${file.name}</span>
+                    </div>
+                    <div class="meta-col">
+                        <div class="folder-name">${file.name}</div>
                     </div>
                 `;
                 div.onclick = () => loadFolderCustom(file.id, file.name, false, containerId, breadcrumbId);
@@ -733,24 +735,26 @@ async function loadFolderCustom(folderId, folderName = "Thư mục admin", reset
             } else {
                 const iconData = getFileIconData(file.name || '');
                 div.className = 'library-item library-file';
-                div.innerHTML = `
-                    <div class="library-left">
-                        <span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span>
-                        <span class="file-name">${file.name}</span>
-                    </div>
+                    div.innerHTML = `
+                        <div class="thumb-col">
+                            <span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span>
+                        </div>
+                        <div class="meta-col">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-sub">Tài liệu</div>
+                        </div>
+                        <div class="actions-col library-actions">
+                            <button class="view-btn" onclick="openPreview('${file.id}')">
+                                ${hi('eye','hi-icon-btn')} <span>Xem</span>
+                            </button>
 
-                    <div class="library-actions">
-                        <button class="view-btn" onclick="openPreview('${file.id}')">
-                            ${hi('eye','hi-icon-btn')} <span>Xem</span>
-                        </button>
+                            <a class="download-btn" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">
+                               ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>
+                            </a>
+                        </div>
+                    `;
 
-                        <a class="download-btn" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">
-                           ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span>
-                        </a>
-                    </div>
-                `;
-
-                container.appendChild(div);
+                    container.appendChild(div);
             }
         });
 
