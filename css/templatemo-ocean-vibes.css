@@ -586,6 +586,42 @@ button.mfp-arrow { display: none; }
     margin-top: 18px;
 }
 
+/* Archive container: allow archive cards to participate directly in the grid.
+   Use `display: contents` so the wrapper does not break grid layout; fall back
+   to `display:none` when hidden via `.is-hidden`. */
+.news-archive-container {
+    display: contents;
+}
+.news-archive-container.is-hidden {
+    display: none;
+}
+
+/* Footer analytics display for site visitor counts */
+.site-analytics {
+    display: flex;
+    gap: 28px;
+    margin-top: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.site-analytics .stat {
+    text-align: center;
+    min-width: 120px;
+}
+.site-analytics .stat .value {
+    display: block;
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f4fa8;
+}
+.site-analytics .stat .label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+}
+
 .news-feed-actions {
     position: relative;
     z-index: 1;
