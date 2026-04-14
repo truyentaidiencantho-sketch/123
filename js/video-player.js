@@ -8,7 +8,7 @@
         modal.className = 'video-player-modal';
         modal.innerHTML = `
             <div class="video-player-wrap">
-                <button class="vp-close" id="vpCloseBtn">✕</button>
+                <button class="vp-close" id="vpCloseBtn" aria-label="Đóng" title="Đóng">✕</button>
                 <div class="iframe-container" style="width:100%;">
                     <iframe id="drivePlayerIframe" class="player-fallback" frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen style="width:100%; height:76vh; border:0; background:#000;"></iframe>
                 </div>

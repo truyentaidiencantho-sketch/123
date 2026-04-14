@@ -140,13 +140,16 @@ function renderFiles(files) {
 
             div.className = "library-item library-folder";
 
+            // Folder rows: do not render a separate Open button — clicking the row opens it.
             div.innerHTML = `
-                <div class="library-left">
+                <div class="thumb-col">
                     <span class="icon-pill pill-folder">${hi('folder')}</span>
-                    <span class="folder-name">${file.name}</span>
+                </div>
+                <div class="meta-col">
+                    <div class="folder-name">${file.name}</div>
                 </div>
             `;
-
+            div.style.cursor = 'pointer';
             div.onclick = () => loadFolder(file.id, file.name);
         }
 
@@ -158,24 +161,21 @@ function renderFiles(files) {
             const iconData = getFileIconData(file.name);
 
             div.innerHTML = `
-                <div class="library-left">
+                <div class="thumb-col">
                     <span class="icon-pill ${iconData.pill}">${hi(iconData.slug)}</span>
-                    <span class="file-name">${file.name}</span>
                 </div>
-
-                <div class="library-actions">
-                    <button class="view-btn"
-                        onclick="openPreview('${file.id}')">
-                        ${hi('eye','hi-icon-btn')} <span>Xem</span>
-                    </button>
-
-                    <a class="download-btn"
-                       href="https://drive.google.com/uc?id=${file.id}&export=download"
-                       target="_blank">
-                       ${hi('arrow-down-tray','hi-icon-btn')} <span>Tải</span>
-                    </a>
+                <div class="meta-col">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-sub">Tài liệu</div>
+                </div>
+                <div class="actions-col">
+                    <button class="view-btn" type="button">${hi('eye','hi-icon-btn')} <span>Xem</span></button>
+                    <a class="download-btn" href="https://drive.google.com/uc?id=${file.id}&export=download" target="_blank">${hi('arrow-down-tray','hi-icon-btn')} <span>Tải về</span></a>
                 </div>
             `;
+
+            const viewBtn = div.querySelector('.view-btn');
+            if (viewBtn) viewBtn.addEventListener('click', () => openPreview(file.id));
         }
 
         container.appendChild(div);
@@ -1013,14 +1013,12 @@ async function performSearch(containerId, query, resultsBox, breadcrumbId) {
             actions.className = 'result-actions';
 
             if (f.mimeType === 'application/vnd.google-apps.folder') {
-                const openBtn = document.createElement('button');
-                openBtn.className = 'view-btn';
-                openBtn.innerHTML = `${hi('folder-open','hi-icon-btn')} <span>Mở</span>`;
-                openBtn.onclick = () => {
+                // Make the whole result row clickable for folders (no separate Open button)
+                row.style.cursor = 'pointer';
+                row.onclick = () => {
                     if (containerId === 'library') loadFolder(f.id, f.name, false);
                     else loadFolderCustom(f.id, f.name, false, containerId, breadcrumbId);
                 };
-                actions.appendChild(openBtn);
             } else {
                 const viewBtn = document.createElement('button');
                 viewBtn.className = 'view-btn';
@@ -1150,14 +1148,12 @@ async function performSearch(containerId, query, resultsBox, breadcrumbId) {
             actions.className = 'result-actions';
 
             if (f.mimeType === 'application/vnd.google-apps.folder') {
-                const openBtn = document.createElement('button');
-                openBtn.className = 'view-btn';
-                openBtn.innerHTML = `${hi('folder-open','hi-icon-btn')} <span>Mở</span>`;
-                openBtn.onclick = () => {
+                // Make the whole result row clickable for folders (no separate Open button)
+                row.style.cursor = 'pointer';
+                row.onclick = () => {
                     if (containerId === 'library') loadFolder(f.id, f.name, false);
                     else loadFolderCustom(f.id, f.name, false, containerId, breadcrumbId);
                 };
-                actions.appendChild(openBtn);
             } else {
                 const viewBtn = document.createElement('button');
                 viewBtn.className = 'view-btn';
