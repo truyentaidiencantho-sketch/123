@@ -132,6 +132,9 @@
                 let buffer = [];
                 let flushTimer = null;
                 const FLUSH_DELAY = 60; // ms
+                const WATCHDOG_TIMEOUT = 8000; // ms without progress before abort
+                const WATCHDOG_POLL = 1000; // ms
+                const seen = new Set();
 
                 function flushBuffer() {
                     if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
@@ -145,18 +148,57 @@
                     }
                 }
 
-                await api.streamNewsFeed(q, DEFAULT_LIMIT, "latest", (article) => {
-                    buffer.push(article);
-                    any = true;
-                    if (!flushTimer) {
-                        flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                const controller = new AbortController();
+                let lastProgress = Date.now();
+                const watchdog = setInterval(() => {
+                    try {
+                        if (Date.now() - lastProgress > WATCHDOG_TIMEOUT) {
+                            try { controller.abort(); } catch (e) {}
+                        }
+                    } catch (e) { /* ignore */ }
+                }, WATCHDOG_POLL);
+
+                try {
+                    await api.streamNewsFeed(q, DEFAULT_LIMIT, "latest", (article) => {
+                        if (!article) return;
+                        const id = article.id || article.fileId || article.detailUrl || article.slug || article.title;
+                        try { console.debug && console.debug('news-feed: received', id, article && article.title); } catch (e) {}
+                        if (id && seen.has(id)) return;
+                        if (id) seen.add(id);
+                        buffer.push(article);
+                        any = true;
+                        lastProgress = Date.now();
+                        if (!flushTimer) {
+                            flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                        }
+                    }, { signal: controller.signal });
+                } catch (err) {
+                    console.warn('streamNewsFeed aborted or failed, falling back to full fetch', err);
+                    try {
+                        const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
+                        const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+                        for (const a of articles) {
+                            const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
+                            if (id && seen.has(id)) continue;
+                            if (id) seen.add(id);
+                            buffer.push(a);
+                        }
+                        if (articles.length) any = true;
+                        // ensure we render fallback results promptly
+                        if (!flushTimer) {
+                            flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                        }
+                    } catch (e2) {
+                        console.warn('fallback getNewsFeed failed', e2);
                     }
-                });
+                } finally {
+                    clearInterval(watchdog);
+                }
 
                 // flush remaining
                 flushBuffer();
 
-                if (!any) {
+                if (!any && !buffer.length) {
                     renderEmpty(
                         grid,
                         q ? "Không tìm thấy bản tin phù hợp." : "Chưa có bản tin để hiển thị.",
@@ -211,6 +253,9 @@
                 let buffer = [];
                 let flushTimer = null;
                 const FLUSH_DELAY = 60; // ms
+                const WATCHDOG_TIMEOUT = 12000; // ms for archive builds
+                const WATCHDOG_POLL = 1000;
+                const seen = new Set();
                 const container = getArchiveContainer(grid);
 
                 function flushBuffer() {
@@ -225,17 +270,55 @@
                     }
                 }
 
-                await api.streamNewsFeed("", ARCHIVE_LIMIT, "archive", (article) => {
-                    buffer.push(article);
-                    any = true;
-                    if (!flushTimer) {
-                        flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                const controller = new AbortController();
+                let lastProgress = Date.now();
+                const watchdog = setInterval(() => {
+                    try {
+                        if (Date.now() - lastProgress > WATCHDOG_TIMEOUT) {
+                            try { controller.abort(); } catch (e) {}
+                        }
+                    } catch (e) { /* ignore */ }
+                }, WATCHDOG_POLL);
+
+                try {
+                    await api.streamNewsFeed("", ARCHIVE_LIMIT, "archive", (article) => {
+                        if (!article) return;
+                        const id = article.id || article.fileId || article.detailUrl || article.slug || article.title;
+                        try { console.debug && console.debug('news-archive: received', id, article && article.title); } catch (e) {}
+                        if (id && seen.has(id)) return;
+                        if (id) seen.add(id);
+                        buffer.push(article);
+                        any = true;
+                        lastProgress = Date.now();
+                        if (!flushTimer) {
+                            flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                        }
+                    }, { signal: controller.signal });
+                } catch (err) {
+                    console.warn('archive stream failed, falling back', err);
+                    try {
+                        const data = await api.getNewsFeed("", ARCHIVE_LIMIT, "archive");
+                        const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+                        for (const a of articles) {
+                            const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
+                            if (id && seen.has(id)) continue;
+                            if (id) seen.add(id);
+                            buffer.push(a);
+                        }
+                        if (articles.length) any = true;
+                        if (!flushTimer) {
+                            flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                        }
+                    } catch (e2) {
+                        console.warn('archive fallback failed', e2);
                     }
-                });
+                } finally {
+                    clearInterval(watchdog);
+                }
 
                 flushBuffer();
 
-                if (any) {
+                if (any || buffer.length) {
                     archiveLoaded = true;
                     archiveVisible = true;
                     btn.textContent = "Thu gọn";

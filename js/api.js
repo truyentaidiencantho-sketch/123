@@ -81,9 +81,12 @@
             return requestJson("newsFeed", { q, limit, source });
         },
         // getSiteAnalytics removed (Cloudflare approach disabled)
-        async streamNewsFeed(q = "", limit = 6, source = "latest", onArticle) {
+        async streamNewsFeed(q = "", limit = 6, source = "latest", onArticle, options = {}) {
             const url = buildUrl("newsFeedStream", { q, limit, source });
-            const res = await fetch(url);
+            const fetchOptions = {};
+            if (options && options.signal) fetchOptions.signal = options.signal;
+            const res = await fetch(url, fetchOptions);
+            try { console.debug && console.debug('streamNewsFeed: fetch', url, 'status', res.status); } catch (e) {}
             if (!res.ok) throw new Error(`${res.status}`);
 
             // If the runtime doesn't support streaming, fall back to full JSON parse
@@ -92,7 +95,13 @@
                 if (!text) return;
                 const lines = text.split('\n').filter(Boolean);
                 for (const line of lines) {
-                    try { onArticle(JSON.parse(line)); } catch (e) { /* ignore */ }
+                    try {
+                        const obj = JSON.parse(line);
+                        try { console.debug && console.debug('streamNewsFeed: parsed (non-stream)', obj && (obj.id || obj.slug || obj.title)); } catch (e) {}
+                        onArticle(obj);
+                    } catch (e) {
+                        try { console.warn && console.warn('streamNewsFeed: malformed JSON (non-stream)', line.slice(0,200), e); } catch (er) {}
+                    }
                 }
                 return;
             }
@@ -101,20 +110,36 @@
             const decoder = new TextDecoder();
             let buf = "";
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buf += decoder.decode(value, { stream: true });
-                const parts = buf.split('\n');
-                buf = parts.pop();
-                for (const line of parts) {
-                    if (!line || !line.trim()) continue;
-                    try { onArticle(JSON.parse(line)); } catch (e) { /* ignore malformed chunk */ }
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                    const parts = buf.split('\n');
+                    buf = parts.pop();
+                    for (const line of parts) {
+                        if (!line || !line.trim()) continue;
+                        try {
+                            const obj = JSON.parse(line);
+                            try { console.debug && console.debug('streamNewsFeed: parsed', obj && (obj.id || obj.slug || obj.title)); } catch (e) {}
+                            onArticle(obj);
+                        } catch (e) {
+                            try { console.warn && console.warn('streamNewsFeed: malformed JSON line', line.slice(0,200), e); } catch (er) {}
+                        }
+                    }
                 }
-            }
 
-            if (buf && buf.trim()) {
-                try { onArticle(JSON.parse(buf)); } catch (e) { /* ignore */ }
+                if (buf && buf.trim()) {
+                    try {
+                        const obj = JSON.parse(buf);
+                        try { console.debug && console.debug('streamNewsFeed: parsed (buf)', obj && (obj.id || obj.slug || obj.title)); } catch (e) {}
+                        onArticle(obj);
+                    } catch (e) {
+                        try { console.warn && console.warn('streamNewsFeed: malformed final chunk', buf.slice(0,200), e); } catch (er) {}
+                    }
+                }
+            } finally {
+                try { reader.releaseLock(); } catch (e) {}
             }
         },
         getNewsArticleUrl(fileId) {
