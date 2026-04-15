@@ -63,16 +63,27 @@
           ]
         }
         </script>
-        <!-- Site icons -->
-        <link rel="icon" href="/img/iconweb.webp" type="image/webp" sizes="any">
-        <link rel="icon" href="/img/iconweb.jpg" type="image/jpeg" sizes="192x192">
-        <link rel="shortcut icon" href="/img/iconweb.webp">
-        <link rel="apple-touch-icon" href="/img/iconweb.webp" sizes="180x180">
+        <!-- Site icons (standardized) -->
+        <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/img/favicon.ico">
+        <link rel="apple-touch-icon" href="/img/favicon.ico" sizes="180x180">
         <link rel="manifest" href="/site.webmanifest">
-        <meta name="msapplication-TileImage" content="/img/iconweb.webp">
+        <meta name="msapplication-TileImage" content="/img/favicon.ico">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        <!-- Prefetch / preconnect hints for third-party hosts to reduce handshake latency -->
+        <link rel="dns-prefetch" href="//unpkg.com">
+        <link rel="preconnect" href="https://unpkg.com" crossorigin>
+        <link rel="dns-prefetch" href="//static.cloudflareinsights.com">
+        <link rel="preconnect" href="https://static.cloudflareinsights.com" crossorigin>
+        <link rel="dns-prefetch" href="//drive.google.com">
+        <link rel="preconnect" href="https://drive.google.com" crossorigin>
+        <!-- Low-priority prefetch for jQuery (helps lazy-load start faster) -->
+        <link rel="prefetch" href="/js/jquery-3.4.1.min.js" as="script">
+        <!-- Preload critical images to improve LCP -->
+        <link rel="preload" as="image" href="/img/logo1.webp">
+        <link rel="preload" as="image" href="/img/cty.webp">
         <link rel="stylesheet" href="css/magnific-popup.css">
         <link rel="stylesheet" href="css/templatemo-ocean-vibes.css">
         <style>
@@ -662,14 +673,52 @@
 
      
  <footer class="tm-footer"><span>Bản thử nghiệm website thông tin của Truyền Tải Điện Cần Thơ</span><span>Admin: Trần Tấn Phát</span></footer>
-        <script src="js/jquery-3.4.1.min.js" defer></script>
-        <script src="js/jquery.magnific-popup.min.js" defer></script>
+        <!-- Core page scripts (load quickly but non-blocking) -->
         <script src="js/api.js" defer></script>
         <script src="js/library.js" defer></script>
         <script src="js/news-feed.js" defer></script>
-        <script src="js/templatemo-script.js" defer></script>
         <script src="js/video-player.js" defer></script>
-<!-- Cloudflare Web Analytics removed (caused CORS errors during local/dev testing) -->
+
+        <!-- Lazy-load heavier, rarely-used UI libraries (jQuery, Magnific Popup, theme init)
+             This reduces unused-JS during initial load; they will load during idle or shortly
+             after the page `load` event. -->
+        <script>
+        (function(){
+            function loadScript(src, attrs){
+                return new Promise(function(resolve, reject){
+                    var s = document.createElement('script');
+                    s.src = src;
+                    // ensure execution order by not setting async
+                    s.async = false;
+                    if (attrs) for (var k in attrs) try { s.setAttribute(k, attrs[k]); } catch (e) {}
+                    s.onload = function(){ resolve(); };
+                    s.onerror = function(e){ reject(e); };
+                    document.body.appendChild(s);
+                });
+            }
+
+            function lazyLoadUI() {
+                // load jQuery first, then popup and theme script
+                loadScript('js/jquery-3.4.1.min.js').then(function(){
+                    return loadScript('js/jquery.magnific-popup.min.js');
+                }).then(function(){
+                    return loadScript('js/templatemo-script.js');
+                }).catch(function(e){
+                    try { console.warn && console.warn('lazyLoadUI failed', e); } catch (err) {}
+                });
+            }
+
+            if ('requestIdleCallback' in window) {
+                try { requestIdleCallback(lazyLoadUI, { timeout: 3000 }); } catch (e) { window.addEventListener('load', function(){ setTimeout(lazyLoadUI, 1200); }); }
+            } else {
+                window.addEventListener('load', function(){ setTimeout(lazyLoadUI, 1200); });
+            }
+        })();
+        </script>
+
+<!-- Cloudflare Web Analytics -->
+ <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "223c5d6fbc6644a7a041f890289bee8b"}'></script><!-- End Cloudflare Web Analytics -->
+
         <!-- PREVIEW MODAL -->
         <div id="previewModal" role="dialog" aria-hidden="true">
             <div class="preview-wrap" role="document">
