@@ -142,6 +142,9 @@
                 try { reader.releaseLock(); } catch (e) {}
             }
         },
+        async retryNewsFeed(body = {}) {
+            return requestJson('newsFeedRetry', null, { method: 'POST', body });
+        },
         getNewsArticleUrl(fileId) {
             return buildUrl("newsArticle", { fileId });
         },

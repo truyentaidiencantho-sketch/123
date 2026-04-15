@@ -52,12 +52,22 @@
             const media = document.createElement("div");
             media.className = "news-card-media";
 
+            // Show thumbnail image directly; fallback to placeholder on error.
             if (article.thumbnailUrl) {
                 const img = document.createElement("img");
+                img.className = "news-card-media-img";
+                img.alt = article.title || "Bản tin";
                 img.loading = "lazy";
                 img.decoding = "async";
                 img.src = article.thumbnailUrl;
-                img.alt = article.title || "Bản tin";
+                img.onerror = function() {
+                    try {
+                        const fallback = document.createElement("div");
+                        fallback.className = "news-card-media-fallback";
+                        fallback.textContent = article.title || "Bản tin";
+                        img.replaceWith(fallback);
+                    } catch (e) {}
+                };
                 media.appendChild(img);
             } else {
                 const fallback = document.createElement("div");
@@ -79,8 +89,9 @@
             if (!article.publishedDateText) {
                 date.classList.add("is-hidden");
             }
-
             const action = document.createElement("div");
+            action.className = "news-card-action";
+            action.textContent = "Xem chi tiết";
             action.className = "news-card-action";
             action.textContent = "Xem chi tiết";
 
@@ -173,23 +184,57 @@
                         }
                     }, { signal: controller.signal });
                 } catch (err) {
-                    console.warn('streamNewsFeed aborted or failed, falling back to full fetch', err);
+                    console.warn('streamNewsFeed aborted or failed, attempting retries', err);
                     try {
-                        const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
-                        const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
-                        for (const a of articles) {
-                            const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
-                            if (id && seen.has(id)) continue;
-                            if (id) seen.add(id);
-                            buffer.push(a);
+                        // Try up to 3 retry attempts by asking server to resend the feed.
+                        // Server will process sequentially if attempt >= 2.
+                        let attempts = 0;
+                        const MAX_ATTEMPTS = 3;
+                        let totalReceived = seen.size || 0;
+
+                        while (attempts < MAX_ATTEMPTS && totalReceived < DEFAULT_LIMIT) {
+                            attempts++;
+                            try {
+                                const resp = await api.retryNewsFeed({ q, limit: DEFAULT_LIMIT, source: 'latest', attempt: attempts, docTimeoutMs: 3000 });
+                                const articles = (resp && Array.isArray(resp.articles)) ? resp.articles : [];
+                                for (const a of articles) {
+                                    const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
+                                    if (id && seen.has(id)) continue;
+                                    if (id) seen.add(id);
+                                    buffer.push(a);
+                                    totalReceived++;
+                                }
+                                if (articles.length) any = true;
+                                if (!flushTimer) flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+
+                                if (totalReceived >= DEFAULT_LIMIT) break;
+                            } catch (retryErr) {
+                                console.warn('retryNewsFeed attempt failed', attempts, retryErr);
+                                // continue to next attempt
+                            }
                         }
-                        if (articles.length) any = true;
-                        // ensure we render fallback results promptly
-                        if (!flushTimer) {
-                            flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+
+                        // If after retries we still have none, fall back to full fetch as last resort
+                        if (totalReceived === 0) {
+                            try {
+                                const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
+                                const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+                                for (const a of articles) {
+                                    const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
+                                    if (id && seen.has(id)) continue;
+                                    if (id) seen.add(id);
+                                    buffer.push(a);
+                                }
+                                if (articles.length) any = true;
+                                if (!flushTimer) {
+                                    flushTimer = setTimeout(flushBuffer, FLUSH_DELAY);
+                                }
+                            } catch (e2) {
+                                console.warn('fallback getNewsFeed failed', e2);
+                            }
                         }
-                    } catch (e2) {
-                        console.warn('fallback getNewsFeed failed', e2);
+                    } catch (e) {
+                        console.warn('retry logic failed', e);
                     }
                 } finally {
                     clearInterval(watchdog);
