@@ -195,7 +195,8 @@
                         while (attempts < MAX_ATTEMPTS && totalReceived < DEFAULT_LIMIT) {
                             attempts++;
                             try {
-                                const resp = await api.retryNewsFeed({ q, limit: DEFAULT_LIMIT, source: 'latest', attempt: attempts, docTimeoutMs: 3000 });
+                                // increase per-doc timeout to give server more time under CPU pressure
+                                const resp = await api.retryNewsFeed({ q, limit: DEFAULT_LIMIT, source: 'latest', attempt: attempts, docTimeoutMs: 5000 });
                                 const articles = (resp && Array.isArray(resp.articles)) ? resp.articles : [];
                                 for (const a of articles) {
                                     const id = a.id || a.fileId || a.detailUrl || a.slug || a.title;
@@ -214,8 +215,8 @@
                             }
                         }
 
-                        // If after retries we still have none, fall back to full fetch as last resort
-                        if (totalReceived === 0) {
+                        // If after retries we still have fewer than the requested limit, fall back to full fetch
+                        if (totalReceived < DEFAULT_LIMIT) {
                             try {
                                 const data = await api.getNewsFeed(q, DEFAULT_LIMIT, "latest");
                                 const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
