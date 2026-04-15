@@ -12,10 +12,58 @@
     <meta property="og:description" content="Thông tin giới thiệu thư viện tài liệu, cách tra cứu và các nhóm nội dung được cập nhật trên website.">
     <meta property="og:url" content="https://truyentaidiencantho.cloud/thu-vien-tai-lieu-truyen-tai-dien-can-tho.html">
     <meta property="og:image" content="https://truyentaidiencantho.cloud/img/logo1.webp">
+    <!-- Site icons (standardized) -->
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico" sizes="180x180">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileImage" content="/img/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/seo-pages.css">
+        <link rel="stylesheet" href="css/seo-pages.css">
+        <style>
+        /* CTA color shift: smoothly alternate background between blue and green (respects reduced-motion) */
+        @keyframes seoCtaColorShift {
+            0% {
+                background: #0ea5e9; /* blue */
+                background-image: none !important;
+                box-shadow: 0 6px 18px rgba(14,165,233,0.18);
+                transform: translateY(0);
+            }
+            50% {
+                background: #10b981; /* green */
+                background-image: none !important;
+                box-shadow: 0 10px 26px rgba(16,185,129,0.22);
+                transform: translateY(-3px);
+            }
+            100% {
+                background: #0ea5e9;
+                background-image: none !important;
+                box-shadow: 0 6px 18px rgba(14,165,233,0.18);
+                transform: translateY(0);
+            }
+        }
+
+        a.seo-btn.seo-btn-primary[href^="https://truyentaidiencantho.cloud"],
+        a.seo-btn.seo-btn-primary[href="/"],
+        a.seo-btn.seo-btn-primary[href="https://truyentaidiencantho.cloud/"] {
+            animation: seoCtaColorShift 2s ease-in-out infinite;
+            will-change: background, transform, box-shadow;
+            color: #fff !important;
+            background-image: none !important;
+            background-repeat: no-repeat !important;
+            border: 0 !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            a.seo-btn.seo-btn-primary[href^="https://truyentaidiencantho.cloud"],
+            a.seo-btn.seo-btn-primary[href="/"],
+            a.seo-btn.seo-btn-primary[href="https://truyentaidiencantho.cloud/"] {
+                animation: none !important;
+            }
+        }
+        </style>
 </head>
 <body>
     <main class="seo-shell">
@@ -23,7 +71,7 @@
             <section class="seo-hero">
                 <span class="seo-kicker">Trang thư viện</span>
                 <h1>Thư viện tài liệu Truyền tải điện Cần Thơ</h1>
-                
+               
             </section>
             <section class="seo-content">
                 <p>Thư viện tài liệu của Truyền tải điện Cần Thơ là nơi tập hợp các nhóm nội dung phục vụ công việc, học tập và bồi huấn. Dữ liệu được đồng bộ qua hệ thống trung gian, giúp việc xem tài liệu và mở thư mục diễn ra trực tiếp trên website.</p>
