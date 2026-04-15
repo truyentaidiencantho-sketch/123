@@ -239,6 +239,9 @@ async function initQuangCao() {
     startGalleryRotation();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initQuangCao);
+} else {
+    // DOM already loaded — run immediately
     initQuangCao();
-});
+}
