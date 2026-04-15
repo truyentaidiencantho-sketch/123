@@ -420,13 +420,14 @@
                 #intro .tm-intro-col-mid .intro-columns li { word-break: normal !important; overflow-wrap: normal !important; hyphens: auto !important; }
             }
 
-            /* Back to top floating button (fixed on the right, always visible) */
-            #backToTop {
+            /* Floating action buttons (reload + back-to-top) — keep equal sizes */
+            :root { --fab-size: 48px; --fab-icon-size: 20px; --fab-size-sm: 40px; --fab-icon-size-sm: 16px; }
+
+            #reloadBtn, #backToTop {
                 position: fixed;
                 right: 18px;
-                bottom: 20px;
-                width: 48px;
-                height: 48px;
+                width: var(--fab-size);
+                height: var(--fab-size);
                 background: linear-gradient(135deg,#0ea5e9,#1976d2);
                 color: #fff;
                 border: 0;
@@ -439,9 +440,20 @@
                 z-index: 10000;
                 transition: transform .12s ease, box-shadow .12s ease;
             }
-            #backToTop:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(15,23,42,0.22); }
-            #backToTop svg { width: 20px; height: 20px; fill: #fff; display: block; }
-            @media (max-width: 360px) { #backToTop { width:40px; height:40px; right:12px; bottom:12px; } #backToTop svg { width:16px; height:16px; } }
+
+            #backToTop { bottom: 20px; }
+            #reloadBtn { bottom: 80px; }
+
+            #reloadBtn img, #reloadBtn svg, #backToTop svg { width: var(--fab-icon-size); height: var(--fab-icon-size); display: block; filter: invert(1); }
+
+            #reloadBtn:hover, #backToTop:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(15,23,42,0.22); }
+
+            @media (max-width: 360px) {
+                #reloadBtn, #backToTop { right: 12px; width: var(--fab-size-sm); height: var(--fab-size-sm); }
+                #reloadBtn { bottom: 60px; }
+                #backToTop { bottom: 12px; }
+                #reloadBtn img, #reloadBtn svg, #backToTop svg { width: var(--fab-icon-size-sm); height: var(--fab-icon-size-sm); }
+            }
 
             /* Extra overrides: ensure library action buttons are compact on small screens
                and folder rows do not reserve extra action space. These selectors
@@ -730,6 +742,11 @@
             </div>
             </div>
     
+        <!-- Reload button (above back-to-top) -->
+        <button id="reloadBtn" aria-label="Làm mới trang" title="Làm mới trang">
+            <img src="https://unpkg.com/heroicons@2.1.5/24/outline/arrow-path.svg" alt="Làm mới" />
+        </button>
+
         <!-- Back to top button -->
         <button id="backToTop" aria-label="Lên đầu trang" title="Lên đầu trang">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 8h6v8h4v-8h6z"/></svg>
@@ -737,9 +754,21 @@
 
         <script>
         (function(){
-            var btn = document.getElementById('backToTop');
-            if(!btn) return;
-            btn.addEventListener('click', function(e){ e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'}); });
+            var backBtn = document.getElementById('backToTop');
+            if(backBtn) {
+                backBtn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    window.scrollTo({top:0, behavior:'smooth'});
+                });
+            }
+
+            var reloadBtn = document.getElementById('reloadBtn');
+            if(reloadBtn) {
+                reloadBtn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    try { location.reload(); } catch (err) { window.location.href = window.location.href; }
+                });
+            }
         })();
         </script>
         </body>
