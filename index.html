@@ -848,28 +848,54 @@ upgrade-insecure-requests;
 
                         const dedup = Array.from(new Set(paths));
 
-                        // Ask worker to purge and refresh these server caches
+                        // Ask worker to purge and refresh these server caches in parallel,
+                        // but don't let a stalled request block the UI — wait at most 2500ms.
                         try {
-                            let purgeResult = null;
+                            function fetchWithTimeout(url, options, ms) {
+                                const controller = new AbortController();
+                                const id = setTimeout(() => controller.abort(), ms);
+                                const opts = Object.assign({}, options || {}, { signal: controller.signal });
+                                return fetch(url, opts).finally(() => clearTimeout(id));
+                            }
+
+                            const purgePromises = [];
+
+                            // Prefer APP_API.purgeCache when available (calls proxyBaseUrl)
                             if (window.APP_API && typeof APP_API.purgeCache === 'function') {
                                 try {
-                                    purgeResult = await APP_API.purgeCache(dedup, true);
-                                } catch (err) {
-                                    // If proxy base or remote purge fails, fallback to same-origin purge endpoint
-                                    try {
-                                        const resp = await fetch('/purgeCache', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) });
-                                        try { purgeResult = await resp.json(); } catch (e) { purgeResult = { ok: resp.ok, status: resp.status }; }
-                                    } catch (er) {
-                                        throw err;
-                                    }
+                                    purgePromises.push(APP_API.purgeCache(dedup, true).catch(e => ({ error: e })));
+                                } catch (e) {
+                                    // ignore
                                 }
-                            } else {
-                                const resp = await fetch('/purgeCache', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) });
-                                try { purgeResult = await resp.json(); } catch (e) { purgeResult = { ok: resp.ok, status: resp.status }; }
                             }
-                            try { console.info && console.info('purgeCache result', purgeResult); } catch (e) {}
+
+                            // Try proxyBaseUrl directly if available on APP_API
+                            try {
+                                const proxyBase = (window.APP_API && window.APP_API.proxyBaseUrl) || '';
+                                if (proxyBase) {
+                                    const url = proxyBase.replace(/\/+$/, '') + '/purgeCache';
+                                    purgePromises.push(fetchWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) }, 2400).then(r => r.json().catch(() => ({ ok: r.ok, status: r.status }))).catch(e => ({ error: e })));
+                                }
+                            } catch (e) {}
+
+                            // Also try same-origin endpoint as a fallback
+                            try {
+                                purgePromises.push(fetchWithTimeout('/purgeCache', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) }, 2400).then(r => r.json().catch(() => ({ ok: r.ok, status: r.status }))).catch(e => ({ error: e })));
+                            } catch (e) {}
+
+                            // Wait for either all attempts settle or timeout (max 2500ms)
+                            try {
+                                await Promise.race([
+                                    Promise.allSettled(purgePromises),
+                                    new Promise(resolve => setTimeout(resolve, 2500)),
+                                ]);
+                            } catch (err) {
+                                // ignore
+                            }
+
+                            try { console.info && console.info('purgeCache attempts finished'); } catch (e) {}
                         } catch (e) {
-                            try { console.warn && console.warn('purgeCache failed', e); } catch (er) {}
+                            try { console.warn && console.warn('purgeCache flow failed', e); } catch (er) {}
                         }
 
                         // Finally reload the page to pick up fresh data (server cache pre-warmed)
