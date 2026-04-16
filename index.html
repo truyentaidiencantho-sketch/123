@@ -100,7 +100,8 @@ upgrade-insecure-requests;
         <link rel="dns-prefetch" href="//drive.google.com">
         <link rel="preconnect" href="https://drive.google.com" crossorigin>
         <!-- Low-priority prefetch for jQuery (helps lazy-load start faster) -->
-        <link rel="prefetch" href="/js/jquery-3.4.1.min.js" as="script">
+        <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+        <link rel="prefetch" href="https://code.jquery.com/jquery-3.7.1.min.js" as="script" crossorigin>
         <!-- Preload critical images to improve LCP -->
         <link rel="preload" as="image" href="/img/logo1.webp">
         <link rel="preload" as="image" href="/img/cty.webp">
@@ -734,8 +735,16 @@ upgrade-insecure-requests;
             }
 
             function lazyLoadUI() {
-                // load jQuery first, then popup and theme script
-                loadScript('js/jquery-3.4.1.min.js').then(function(){
+                // load jQuery first (CDN), fallback to local copies if CDN unavailable,
+                // then load popup and theme scripts.
+                loadScript('https://code.jquery.com/jquery-3.7.1.min.js', { crossorigin: 'anonymous' })
+                .catch(function(){
+                    // try local 3.7.1; if unavailable, continue silently
+                    return loadScript('js/jquery-3.7.1.min.js').catch(function(){
+                        // silent fallback
+                    });
+                })
+                .then(function(){
                     return loadScript('js/jquery.magnific-popup.min.js');
                 }).then(function(){
                     return loadScript('js/templatemo-script.js');
