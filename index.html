@@ -72,7 +72,17 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://static.cloudflareinsights.com https://drive.google.com; img-src 'self' data: https: https://unpkg.com https://drive.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.google.com https://drive.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+        <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    img-src 'self' data: https:;
+    script-src 'self' 'unsafe-inline' https:;
+    style-src 'self' 'unsafe-inline' https:;
+    font-src 'self' https:;
+    connect-src 'self' https://truyentai-drive-proxy.truyentaidiencantho.workers.dev https://www.googleapis.com https://docs.google.com;
+    frame-src 'self' https:;
+    object-src 'none';
+    base-uri 'self';
+    ">
         <meta name="referrer" content="strict-origin-when-cross-origin">
         <meta http-equiv="X-Content-Type-Options" content="nosniff">
         <!-- Prefetch / preconnect hints for third-party hosts to reduce handshake latency -->
