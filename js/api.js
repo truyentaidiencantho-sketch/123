@@ -24,6 +24,30 @@
         return url.toString();
     }
 
+    // LocalStorage cache helpers (simple TTL cache)
+    function _getLocalCache(key, ttlMs) {
+        try {
+            const now = Date.now();
+            const raw = localStorage.getItem(key);
+            const ts = Number(localStorage.getItem(key + "_time") || 0);
+            if (raw && ts && (now - ts) < ttlMs) {
+                return JSON.parse(raw);
+            }
+        } catch (e) {
+            // ignore storage errors
+        }
+        return null;
+    }
+
+    function _setLocalCache(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            localStorage.setItem(key + "_time", String(Date.now()));
+        } catch (e) {
+            // ignore storage errors
+        }
+    }
+
     async function requestJson(path, params, options = {}) {
         const method = (options.method || "GET").toUpperCase();
         const fetchOptions = { method };
@@ -67,18 +91,33 @@
             return normalizeFolderResponse(data);
         },
         async listDriveFiles(folderId) {
+            const cacheKey = `listDriveFiles::${folderId}`;
+            const cached = _getLocalCache(cacheKey, 60 * 60 * 1000); // 1 hour
+            if (cached) {
+                return normalizeFolderResponse(cached).files;
+            }
             const data = await requestJson("listDriveFiles", { folderId });
+            _setLocalCache(cacheKey, data);
             return normalizeFolderResponse(data).files;
         },
         // [COPILOT-EDIT] Server-side search API: searchDriveFiles(q, folderId, rootKey, options)
         async searchDriveFiles(q, folderId, rootKey, options = {}) {
             const params = Object.assign({ q, folderId, rootKey }, options || {});
+            const cacheKey = `searchDriveFiles::${q || ''}::${folderId || ''}::${rootKey || ''}`;
+            const cached = _getLocalCache(cacheKey, 10 * 60 * 1000); // 10 minutes
+            if (cached) return cached;
             const data = await requestJson("searchDriveFiles", params);
+            if (data) _setLocalCache(cacheKey, data);
             if (!data) return { results: [] };
             return data;
         },
         async getNewsFeed(q = "", limit = 6, source = "latest") {
-            return requestJson("newsFeed", { q, limit, source });
+            const cacheKey = `newsFeed::${q || ''}::${limit}::${source}`;
+            const cached = _getLocalCache(cacheKey, 60 * 60 * 1000); // 1 hour
+            if (cached) return cached;
+            const data = await requestJson("newsFeed", { q, limit, source });
+            _setLocalCache(cacheKey, data);
+            return data;
         },
         // getSiteAnalytics removed (Cloudflare approach disabled)
         async streamNewsFeed(q = "", limit = 6, source = "latest", onArticle, options = {}) {
@@ -159,6 +198,10 @@
                 method: "POST",
                 body: { password },
             });
+        },
+        // Purge server cache entries and optionally refresh them.
+        async purgeCache(paths = [], refresh = true) {
+            return requestJson("purgeCache", null, { method: "POST", body: { paths, refresh } });
         },
     };
 
