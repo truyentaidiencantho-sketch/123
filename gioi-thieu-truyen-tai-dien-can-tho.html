@@ -21,6 +21,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://static.cloudflareinsights.com https://drive.google.com; img-src 'self' data: https: https://unpkg.com https://drive.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.google.com https://drive.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
         <link rel="stylesheet" href="css/seo-pages.css">
         <style>
         /* CTA color shift: smoothly alternate background between blue and green (respects reduced-motion) */
@@ -94,9 +97,62 @@
             }
         }
         </script>
+        /* Skip link for accessibility: hidden until focused */
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+        .skip-link:focus,
+        .skip-link:active {
+            position: static;
+            left: 0;
+            width: auto;
+            height: auto;
+            padding: 8px 12px;
+            background: #000;
+            color: #fff;
+            z-index: 1000;
+            text-decoration: none;
+        }
+        </style>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "url": "https://truyentaidiencantho.cloud/gioi-thieu-truyen-tai-dien-can-tho.html",
+            "mainEntity": {
+                "@type": "Organization",
+                "name": "Truyền tải điện Cần Thơ",
+                "url": "https://truyentaidiencantho.cloud/",
+                "logo": "https://truyentaidiencantho.cloud/img/logo1.webp",
+                "email": "truyentaidiencantho@gmail.com",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "Số 41 đường 3/2",
+                    "addressLocality": "Phường Xuân Khánh",
+                    "addressRegion": "Cần Thơ",
+                    "addressCountry": "VN"
+                },
+                "contactPoint": [
+                    {
+                        "@type": "ContactPoint",
+                        "contactType": "customer service",
+                        "email": "truyentaidiencantho@gmail.com",
+                        "areaServed": "VN",
+                        "availableLanguage": ["vi"]
+                    }
+                ]
+            }
+        }
+        </script>
 </head>
 <body>
-    <main class="seo-shell">
+    <a class="skip-link" href="#main-content">nội dung chính</a>
+    <main id="main-content" role="main" class="seo-shell">
         <article class="seo-card">
             <section class="seo-hero">
                 <span class="seo-kicker">Trang giới thiệu</span>
@@ -104,7 +160,7 @@
                 <p>Trang mô tả tổng quan về website, địa chỉ đơn vị và các nhóm thông tin đang được cung cấp cho người dùng truy cập.</p>
             </section>
             <section class="seo-content">
-                <p>Cổng thông tin Truyền tải điện Cần Thơ được xây dựng để tập trung các nhóm nội dung như giới thiệu đơn vị, bản tin, kế hoạch, thư viện tài liệu, video và thông tin liên hệ.</p>
+                <p>Cổng thông tin Truyền tải điện Cần Thơ được xây dựng để tập trung các nhóm nội dung như giới thiệu đơn vị, bản tin, kế hoạch, thư viện tài liệu, video và thông tin liên hệ. </p>
 
                 <h2>Thông tin cơ bản</h2>
                 <ul>
@@ -112,14 +168,13 @@
                     <li>Địa chỉ: Số 41 đường 3/2, Phường Xuân Khánh, Quận Ninh Kiều, Cần Thơ.</li>
                     <li>Email liên hệ: truyentaidiencantho@gmail.com.</li>
                 </ul>
-                <h2>Mời bạn bấm vào nút xanh để đến trang chủ</h2>
-
+                <h2>Mời bạn bấm vào nút xanh để mở trang chủ</h2>
                 <div class="seo-actions">
                     <a class="seo-btn seo-btn-primary" href="https://truyentaidiencantho.cloud/">Mở website chính</a>
                     <a class="seo-btn seo-btn-secondary" href="https://truyentaidiencantho.cloud/#contact">Xem liên hệ</a>
                 </div>
 
-                <p class="seo-meta">Từ khóa mục tiêu: giới thiệu Truyền tải điện Cần Thơ, cổng thông tin Truyền tải điện Cần Thơ.</p>
+                <p class="seo-meta">giới thiệu Truyền tải điện Cần Thơ, cổng thông tin Truyền tải điện Cần Thơ.</p>
             </section>
         </article>
     </main>

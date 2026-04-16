@@ -68,10 +68,13 @@
         <link rel="shortcut icon" href="/favicon.ico">
         <link rel="apple-touch-icon" href="/favicon.ico" sizes="180x180">
         <link rel="manifest" href="/site.webmanifest">
-        <meta name="msapplication-TileImage" content="/favicon.ico">
+        <meta name="msapplication-TileImage" content="/img/favicon.ico">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://static.cloudflareinsights.com https://drive.google.com; img-src 'self' data: https: https://unpkg.com https://drive.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.google.com https://drive.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
         <!-- Prefetch / preconnect hints for third-party hosts to reduce handshake latency -->
         <link rel="dns-prefetch" href="//unpkg.com">
         <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -518,9 +521,13 @@
 
             }
 
+        /* Skip link for accessibility: hidden until focused */
+        .skip-link { position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+        .skip-link:focus, .skip-link:active { position: static; left: 0; width: auto; height: auto; padding: 8px 12px; background: #000; color: #fff; z-index: 1000; text-decoration: none; }
         </style>
     </head>
     <body>
+        <a class="skip-link" href="#main-content">đến nội dung chính</a>
         <header class="tm-site-header">
             <div class="image-container3">
                 <picture>
@@ -536,7 +543,7 @@
             </div>
         </header>
 
-        <div class="tm-container">
+        <div id="main-content" role="main" class="tm-container">
             <div class="nav-hero">
                 <h1 class="tm-section-heading">DANH MỤC TÙY CHỌN</h1>
                 <nav class="tm-main-nav">
@@ -676,7 +683,7 @@
                     <div class="contact-info">
                         <address class="contact-address">Số 41 đường 3/2, Phường Xuân Khánh,<br>Quận Ninh Kiều, Thành Phố Cần Thơ</address>
                         <div class="contact-email"><img src="https://unpkg.com/heroicons@2.1.5/24/outline/at-symbol.svg" alt="" class="icon-inline"> <a href="mailto:truyentaidiencantho@gmail.com">Email: truyentaidiencantho@gmail.com</a></div>
-                        <div class="contact-actions"><a class="tm-btn" href="https://www.google.com/maps/search/?api=1&query=41+duong+3%2F2+Can+Tho" target="_blank" rel="noopener">Mở trong Google Maps</a></div>
+                        <div class="contact-actions"><a class="tm-btn" href="https://www.google.com/maps/search/?api=1&query=41+duong+3%2F2+Can+Tho" target="_blank" rel="noopener noreferrer">Mở trong Google Maps</a></div>
                     </div>
                 </div>
             </div>

@@ -21,6 +21,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://static.cloudflareinsights.com https://drive.google.com; img-src 'self' data: https: https://unpkg.com https://drive.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.google.com https://drive.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
         <link rel="stylesheet" href="css/seo-pages.css">
         <style>
         /* CTA color shift: smoothly alternate background between blue and green (respects reduced-motion) */
@@ -63,15 +66,38 @@
                 animation: none !important;
             }
         }
+
+        /* Skip link for accessibility: hidden until focused */
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+        .skip-link:focus,
+        .skip-link:active {
+            position: static;
+            left: 0;
+            width: auto;
+            height: auto;
+            padding: 8px 12px;
+            background: #000;
+            color: #fff;
+            z-index: 1000;
+            text-decoration: none;
+        }
         </style>
 </head>
 <body>
-    <main class="seo-shell">
+    <a class="skip-link" href="#main-content">nội dung chính</a>
+    <main id="main-content" role="main" class="seo-shell">
         <article class="seo-card">
             <section class="seo-hero">
                 <span class="seo-kicker">Trang bản tin</span>
                 <h1>Bản tin và kế hoạch Truyền tải điện Cần Thơ</h1>
-                <p>Trang phụ này giúp mô tả rõ chủ đề bản tin, kế hoạch và nội dung cập nhật định kỳ của website đối với công cụ tìm kiếm.</p>
+               
             </section>
             <section class="seo-content">
                 <p>Khu vực bản tin và kế hoạch trên website được dùng để tập hợp các nội dung cần theo dõi như thông báo, tư liệu triển khai, danh mục cập nhật và các thư mục liên quan đến công tác đơn vị. Đây là nhóm nội dung được người dùng tìm nhiều khi cần tra cứu nhanh.</p>
@@ -83,7 +109,7 @@
                     <a class="seo-btn seo-btn-secondary" href="https://truyentaidiencantho.cloud/#gallery">Mở mục bản tin</a>
                 </div>
 
-                <p class="seo-meta">Từ khóa mục tiêu: bản tin truyền tải điện Cần Thơ, kế hoạch truyền tải điện Cần Thơ.</p>
+                <p class="seo-meta">bản tin truyền tải điện Cần Thơ, kế hoạch truyền tải điện Cần Thơ.</p>
             </section>
         </article>
     </main>
