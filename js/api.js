@@ -59,6 +59,11 @@
             fetchOptions.body = JSON.stringify(options.body);
         }
 
+        // Allow callers to force a fresh fetch (bypass CDN/edge cache)
+        if (options.forceRefresh) {
+            fetchOptions.headers = Object.assign({}, fetchOptions.headers || {}, { 'x-force-refresh': '1' });
+        }
+
         const res = await fetch(buildUrl(path, params), fetchOptions);
         const text = await res.text();
 
@@ -96,7 +101,7 @@
             if (cached) {
                 return normalizeFolderResponse(cached).files;
             }
-            const data = await requestJson("listDriveFiles", { folderId });
+            const data = await requestJson("listDriveFiles", { folderId }, { forceRefresh: true });
             _setLocalCache(cacheKey, data);
             return normalizeFolderResponse(data).files;
         },
@@ -106,7 +111,7 @@
             const cacheKey = `searchDriveFiles::${q || ''}::${folderId || ''}::${rootKey || ''}`;
             const cached = _getLocalCache(cacheKey, 5 * 60 * 1000); // 5 minutes
             if (cached) return cached;
-            const data = await requestJson("searchDriveFiles", params);
+            const data = await requestJson("searchDriveFiles", params, { forceRefresh: true });
             if (data) _setLocalCache(cacheKey, data);
             if (!data) return { results: [] };
             return data;
@@ -115,7 +120,7 @@
             const cacheKey = `newsFeed::${q || ''}::${limit}::${source}`;
             const cached = _getLocalCache(cacheKey, 5 * 60 * 1000); // 5 minutes
             if (cached) return cached;
-            const data = await requestJson("newsFeed", { q, limit, source });
+            const data = await requestJson("newsFeed", { q, limit, source }, { forceRefresh: true });
             _setLocalCache(cacheKey, data);
             return data;
         },
