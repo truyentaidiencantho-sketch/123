@@ -92,7 +92,7 @@
         },
         async listDriveFiles(folderId) {
             const cacheKey = `listDriveFiles::${folderId}`;
-            const cached = _getLocalCache(cacheKey, 60 * 60 * 1000); // 1 hour
+            const cached = _getLocalCache(cacheKey, 5 * 60 * 1000); // 5 minutes
             if (cached) {
                 return normalizeFolderResponse(cached).files;
             }
@@ -104,7 +104,7 @@
         async searchDriveFiles(q, folderId, rootKey, options = {}) {
             const params = Object.assign({ q, folderId, rootKey }, options || {});
             const cacheKey = `searchDriveFiles::${q || ''}::${folderId || ''}::${rootKey || ''}`;
-            const cached = _getLocalCache(cacheKey, 10 * 60 * 1000); // 10 minutes
+            const cached = _getLocalCache(cacheKey, 5 * 60 * 1000); // 5 minutes
             if (cached) return cached;
             const data = await requestJson("searchDriveFiles", params);
             if (data) _setLocalCache(cacheKey, data);
@@ -113,7 +113,7 @@
         },
         async getNewsFeed(q = "", limit = 6, source = "latest") {
             const cacheKey = `newsFeed::${q || ''}::${limit}::${source}`;
-            const cached = _getLocalCache(cacheKey, 60 * 60 * 1000); // 1 hour
+            const cached = _getLocalCache(cacheKey, 5 * 60 * 1000); // 5 minutes
             if (cached) return cached;
             const data = await requestJson("newsFeed", { q, limit, source });
             _setLocalCache(cacheKey, data);
