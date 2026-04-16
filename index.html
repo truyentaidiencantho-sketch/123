@@ -885,15 +885,19 @@ upgrade-insecure-requests;
 
                             // Wait for either all attempts settle or timeout (max 2500ms)
                             try {
-                                await Promise.race([
-                                    Promise.allSettled(purgePromises),
+                                const settleAll = Promise.allSettled(purgePromises);
+                                const raceRes = await Promise.race([
+                                    settleAll,
                                     new Promise(resolve => setTimeout(resolve, 2500)),
                                 ]);
+                                if (Array.isArray(raceRes)) {
+                                    try { console.info && console.info('purgeCache results', raceRes); } catch (e) {}
+                                } else {
+                                    try { console.info && console.info('purgeCache timed out (not all attempts finished within 2500ms)'); } catch (e) {}
+                                }
                             } catch (err) {
-                                // ignore
+                                try { console.warn && console.warn('purgeCache waiting failed', err); } catch (e) {}
                             }
-
-                            try { console.info && console.info('purgeCache attempts finished'); } catch (e) {}
                         } catch (e) {
                             try { console.warn && console.warn('purgeCache flow failed', e); } catch (er) {}
                         }
