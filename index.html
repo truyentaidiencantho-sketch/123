@@ -797,9 +797,86 @@ upgrade-insecure-requests;
 
             var reloadBtn = document.getElementById('reloadBtn');
             if(reloadBtn) {
-                reloadBtn.addEventListener('click', function(e){
+                reloadBtn.addEventListener('click', async function(e){
                     e.preventDefault();
-                    try { location.reload(); } catch (err) { window.location.href = window.location.href; }
+                    try {
+                        // Clear frontend localStorage caches (prefix-based)
+                        try {
+                            const prefixes = ['newsFeed::', 'listDriveFiles::', 'searchDriveFiles::'];
+                            for (let i = localStorage.length - 1; i >= 0; i--) {
+                                const key = localStorage.key(i);
+                                if (!key) continue;
+                                for (const p of prefixes) {
+                                    if (key.indexOf(p) === 0) {
+                                        try { localStorage.removeItem(key); } catch (e) {}
+                                        try { localStorage.removeItem(key + '_time'); } catch (e) {}
+                                    }
+                                }
+                            }
+                        } catch (e) { /* ignore localStorage errors */ }
+
+                        // Build list of server cache paths to purge (include current feed and visible articles)
+                        const paths = [];
+                        const qInput = document.getElementById('news-feed-query');
+                        const q = (qInput && qInput.value) ? qInput.value.trim() : '';
+                        const DEFAULT_LIMIT = 6;
+                        paths.push(`/newsFeed?limit=${DEFAULT_LIMIT}&source=latest`);
+                        paths.push(`/newsFeed?limit=${DEFAULT_LIMIT}&source=archive`);
+                        paths.push(`/newsFeedStream?limit=${DEFAULT_LIMIT}&source=latest`);
+                        paths.push(`/newsFeedStream?limit=${DEFAULT_LIMIT}&source=archive`);
+                        if (q) {
+                            paths.push(`/newsFeed?q=${encodeURIComponent(q)}&limit=${DEFAULT_LIMIT}&source=latest`);
+                            paths.push(`/newsFeedStream?q=${encodeURIComponent(q)}&limit=${DEFAULT_LIMIT}&source=latest`);
+                        }
+
+                        // collect article fileIds from rendered cards
+                        try {
+                            const cards = document.querySelectorAll('.news-card');
+                            cards.forEach(function(card){
+                                try {
+                                    const href = (card && card.href) ? card.href : (card.getAttribute && card.getAttribute('href')) || '';
+                                    if (!href) return;
+                                    const u = new URL(href, location.origin);
+                                    const fileId = u.searchParams.get('fileId');
+                                    if (fileId) {
+                                        paths.push(`/articleSummary?fileId=${encodeURIComponent(fileId)}`);
+                                        paths.push(`/newsArticle?fileId=${encodeURIComponent(fileId)}`);
+                                    }
+                                } catch (e) {}
+                            });
+                        } catch (e) {}
+
+                        const dedup = Array.from(new Set(paths));
+
+                        // Ask worker to purge and refresh these server caches
+                        try {
+                            let purgeResult = null;
+                            if (window.APP_API && typeof APP_API.purgeCache === 'function') {
+                                try {
+                                    purgeResult = await APP_API.purgeCache(dedup, true);
+                                } catch (err) {
+                                    // If proxy base or remote purge fails, fallback to same-origin purge endpoint
+                                    try {
+                                        const resp = await fetch('/purgeCache', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) });
+                                        try { purgeResult = await resp.json(); } catch (e) { purgeResult = { ok: resp.ok, status: resp.status }; }
+                                    } catch (er) {
+                                        throw err;
+                                    }
+                                }
+                            } else {
+                                const resp = await fetch('/purgeCache', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: dedup, refresh: true }) });
+                                try { purgeResult = await resp.json(); } catch (e) { purgeResult = { ok: resp.ok, status: resp.status }; }
+                            }
+                            try { console.info && console.info('purgeCache result', purgeResult); } catch (e) {}
+                        } catch (e) {
+                            try { console.warn && console.warn('purgeCache failed', e); } catch (er) {}
+                        }
+
+                        // Finally reload the page to pick up fresh data (server cache pre-warmed)
+                        try { location.reload(); } catch (err) { window.location.href = window.location.href; }
+                    } catch (err) {
+                        try { location.reload(); } catch (err2) { window.location.href = window.location.href; }
+                    }
                 });
             }
         })();
