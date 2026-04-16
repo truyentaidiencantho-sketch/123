@@ -27,8 +27,14 @@ img-src 'self' data: https:;
 script-src 'self' 'unsafe-inline' https:;
 style-src 'self' 'unsafe-inline' https:;
 font-src 'self' https:;
-connect-src 'self' https://truyentai-drive-proxy.truyentaidiencantho.workers.dev https://www.googleapis.com https://docs.google.com;
-frame-src https://docs.google.com;
+connect-src 'self'
+  https://truyentai-drive-proxy.truyentaidiencantho.workers.dev
+  https://www.googleapis.com
+  https://docs.google.com
+  https://cloudflareinsights.com;
+frame-src
+  https://docs.google.com
+  https://drive.google.com;
 object-src 'none';
 base-uri 'self';
 upgrade-insecure-requests;
