@@ -85,12 +85,13 @@ connect-src 'self'
   https://cloudflareinsights.com;
 frame-src
   https://docs.google.com
-  https://drive.google.com;
+  https://drive.google.com
+  https://www.google.com
+  https://maps.google.com;
 object-src 'none';
 base-uri 'self';
 upgrade-insecure-requests;
-">
-        <meta name="referrer" content="strict-origin-when-cross-origin">
+">   <meta name="referrer" content="strict-origin-when-cross-origin">
         <meta http-equiv="X-Content-Type-Options" content="nosniff">
         <!-- Prefetch / preconnect hints for third-party hosts to reduce handshake latency -->
         <link rel="dns-prefetch" href="//unpkg.com">
