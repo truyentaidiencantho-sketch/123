@@ -141,6 +141,7 @@
                 grid.innerHTML = ""; // clear grid immediately
                 let any = false;
                 let buffer = [];
+                let didRefreshAfterInitialLoad = false;
                 let flushTimer = null;
                 const FLUSH_DELAY = 60; // ms
                 const WATCHDOG_TIMEOUT = 8000; // ms without progress before abort
@@ -243,6 +244,36 @@
 
                 // flush remaining
                 flushBuffer();
+
+                // If we received the full requested batch (6) from the stream,
+                // do a one-time refresh of the list to ensure any missing details
+                // are filled in. This touches only the news grid, not the page.
+                try {
+                    if (!didRefreshAfterInitialLoad && (seen.size || 0) >= DEFAULT_LIMIT) {
+                        didRefreshAfterInitialLoad = true;
+                        // clear client-side cache so getNewsFeed will fetch fresh data
+                        try {
+                            const cacheKey = `newsFeed::${q || ''}::${DEFAULT_LIMIT}::latest`;
+                            localStorage.removeItem(cacheKey);
+                            localStorage.removeItem(cacheKey + '_time');
+                        } catch (e) {}
+
+                        // schedule a short delayed refresh to avoid UI thrashing
+                        setTimeout(async () => {
+                            try {
+                                if (!api || typeof api.getNewsFeed !== 'function') return;
+                                const data = await api.getNewsFeed(q, DEFAULT_LIMIT, 'latest');
+                                const articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+                                if (articles && articles.length) {
+                                    try {
+                                        grid.innerHTML = '';
+                                        renderCards(grid, articles);
+                                    } catch (e) { /* ignore render errors */ }
+                                }
+                            } catch (e) { /* ignore refresh errors */ }
+                        }, 300);
+                    }
+                } catch (e) { /* ignore */ }
 
                 if (!any && !buffer.length) {
                     renderEmpty(
